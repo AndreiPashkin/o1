@@ -1,0 +1,12 @@
+[package]
+name = "o1"
+version = "0.0.1-alpha.1"
+edition = "2021"
+
+[features]
+_slow-tests = []
+
+[dependencies]
+
+[dev-dependencies]
+rand = { version = "~0.8.5", features = ["small_rng", "std_rng"] }

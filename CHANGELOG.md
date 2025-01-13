@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README.md with the roadmap.
 - .gitignore file.
 - pre-commit config.
+- Multiply-shift hashing algorithm.
+- Polynomial hashing algorithm.
+- Universality guarantee tests for both.
 
 ### Changed
 
