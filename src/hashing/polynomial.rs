@@ -10,6 +10,7 @@
 
 use crate::hashing::common::{extract_bits_32, mod_mersenne_prime};
 use crate::hashing::multiply_shift::pair_multiply_shift;
+use core::mem::align_of;
 
 /// Combines two independent hash values (hash1 and hash2) by concatenating them
 /// into a 64-bit value. This ensures strong universality by using two distinct
@@ -37,7 +38,7 @@ const fn concat_pair_multiply_shift(value: u64, h1_seed: &[u64; 3], h2_seed: &[u
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub const fn polynomial(value: &[u8], num_bits: u32, p: u128, p_e: u32, seed: &[u64; 8]) -> u32 {
+pub fn polynomial(value: &[u8], num_bits: u32, p: u128, p_e: u32, seed: &[u64; 8]) -> u32 {
     // TODO: Clarify the constraints up to which the function gives strong
     //       universality guarantees.
     let a: u64 = seed[0];
@@ -65,49 +66,69 @@ pub const fn polynomial(value: &[u8], num_bits: u32, p: u128, p_e: u32, seed: &[
 
     let mut hash_value: u64 = 0;
 
-    // Process the leading aligned part by reinterpreting it as a slice of u64
-    let aligned_len = value.len() & !7; // Largest multiple of 8 less than or equal to s.len()
-    let words_count = aligned_len / 8;
-    // TODO: Not sure if this sort trick is really beneficial here. Need to benchmark.
-    let words: &[u64] =
-        unsafe { core::slice::from_raw_parts(value.as_ptr() as *const u64, words_count) };
+    let mut value = value;
 
-    let mut i = 0;
-    while i < words_count {
-        let mut j = 0;
-        let mut chunk_hash: u64 = 0;
+    // Handle misaligned pointer:
+    // - Process the misaligned leading part
+    // - Leave the aligned part for further processing
+    let prefix_len = align_of::<u64>() - value.as_ptr() as usize % align_of::<u64>();
+    if prefix_len > 0 {
+        let prefix_len = prefix_len.min(value.len());
 
-        // TODO: Could be replaced in a sequence of 32 hashing operations -
-        //       need to benchmark for a potential speedup.
-        while j < 32 && i < words_count {
-            chunk_hash ^= concat_pair_multiply_shift(words[i], h1_seed, h2_seed);
-            j += 1;
-            i += 1;
+        let mut prefix_word: u64 = 0;
+        let mut prefix_hash: u64 = 0;
+
+        for (i, &byte) in value[..prefix_len].iter().enumerate() {
+            prefix_word |= (byte as u64) << (8 * i);
         }
+        prefix_hash ^= concat_pair_multiply_shift(prefix_word, h1_seed, h2_seed);
+
         // Apply polynomial hashing using Horner’s rule
-        hash_value =
-            mod_mersenne_prime(hash_value.wrapping_mul(a).wrapping_add(chunk_hash), p, p_e);
+        hash_value = prefix_hash;
+        value = &value[prefix_len..];
     }
 
-    // TODO: This could be optimized by matching against each of the 7 corner cases
-    //       of possible remainders.
-    // Process the unaligned remainder part
-    let mut remainder_hash: u64 = 0;
-    let mut remainder_word: u64 = 0;
-    let remainder_len = value.len() - aligned_len;
-    let mut i = 0;
-    while i < remainder_len {
-        remainder_word |= (value[aligned_len + i] as u64) << (8 * i);
-        i += 1;
-    }
-    remainder_hash ^= concat_pair_multiply_shift(remainder_word, h1_seed, h2_seed);
+    if !value.is_empty() {
+        // Process the leading aligned part by reinterpreting it as a slice of u64
+        let aligned_len = value.len() & !7; // Largest multiple of 8 less than or equal to s.len()
+        let words_count = aligned_len / 8;
+        // TODO: Not sure if this sort trick is really beneficial here. Need to benchmark.
+        let words: &[u64] =
+            unsafe { core::slice::from_raw_parts(value.as_ptr() as *const u64, words_count) };
 
-    // Apply polynomial hashing using Horner’s rule once again
-    hash_value = mod_mersenne_prime(
-        hash_value.wrapping_mul(a).wrapping_add(remainder_hash),
-        p,
-        p_e,
-    );
+        for (i, chunk) in words.chunks(32).enumerate() {
+            let mut chunk_hash: u64 = 0;
+
+            for word in chunk {
+                chunk_hash ^= concat_pair_multiply_shift(*word, h1_seed, h2_seed);
+            }
+            // Apply polynomial hashing using Horner’s rule
+            if i == 0 && prefix_len == 0 {
+                hash_value = chunk_hash;
+            } else {
+                hash_value =
+                    mod_mersenne_prime(hash_value.wrapping_mul(a).wrapping_add(chunk_hash), p, p_e);
+            }
+        }
+
+        // TODO: This could be optimized by matching against each of the 7 corner cases
+        //       of possible remainders.
+        // Process the unaligned remainder part
+        let mut remainder_hash: u64 = 0;
+        let mut remainder_word: u64 = 0;
+        let remainder_len = value.len() - aligned_len;
+        for i in 0..remainder_len {
+            remainder_word |= (value[aligned_len + i] as u64) << (8 * i);
+        }
+        remainder_hash ^= concat_pair_multiply_shift(remainder_word, h1_seed, h2_seed);
+
+        // Apply polynomial hashing using Horner’s rule once again
+        hash_value = mod_mersenne_prime(
+            hash_value.wrapping_mul(a).wrapping_add(remainder_hash),
+            p,
+            p_e,
+        );
+    }
 
     // Add the random constant b and reduce modulo p
     hash_value = mod_mersenne_prime(hash_value.wrapping_add(b), p, p_e);
