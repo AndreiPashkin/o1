@@ -37,7 +37,7 @@ const fn concat_pair_multiply_shift(value: u64, h1_seed: &[u64; 3], h2_seed: &[u
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub const fn polynomial(value: &[u8], num_bits: u32, p: u64, p_e: u32, seed: &[u64; 8]) -> u32 {
+pub const fn polynomial(value: &[u8], num_bits: u32, p: u128, p_e: u32, seed: &[u64; 8]) -> u32 {
     // TODO: Clarify the constraints up to which the function gives strong
     //       universality guarantees.
     let a: u64 = seed[0];
@@ -54,8 +54,14 @@ pub const fn polynomial(value: &[u8], num_bits: u32, p: u64, p_e: u32, seed: &[u
     // TODO: Add more assertions to all functions to clarify constraints
     //       for other parameters (like `a` and `p`).
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
-    debug_assert!(a > 0 && a < p, r#""seed[0]" must be in the range [1, p-1]"#);
-    debug_assert!(a < p, r#""seed[1]" must be in the range [0, p-1]"#);
+    debug_assert!(
+        a > 0 && (a as u128) < p,
+        r#""seed[0]" must be in the range [1, p-1]"#
+    );
+    debug_assert!(
+        (a as u128) < p,
+        r#""seed[1]" must be in the range [0, p-1]"#
+    );
 
     let mut hash_value: u64 = 0;
 
@@ -120,15 +126,15 @@ mod tests {
     #[test]
     #[cfg_attr(not(feature = "_slow-tests"), ignore)]
     fn test_polynomial_universality_guarantee() {
-        let p = 2_u64.pow(61) - 1;
-        let p_e = 61;
+        let p_e = 89;
+        let p = 2_u128.pow(p_e) - 1;
         let keys = unique_random_str(999999, 3, 99);
         let num_trials = 99;
         let family = Box::new(|seed: u64, num_buckets: usize| {
             let mut rng = SmallRng::seed_from_u64(seed);
             let seed: [u64; 8] = [
-                rng.gen_range(1..=p - 1),
-                rng.gen_range(0..=p - 1),
+                rng.gen_range(1..=p - 1) as u64,
+                rng.gen_range(0..=p - 1) as u64,
                 rng.gen(),
                 rng.gen(),
                 rng.gen(),

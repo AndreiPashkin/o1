@@ -12,17 +12,18 @@ pub const fn extract_bits_32(value: u64, num_bits: u32) -> u32 {
 ///
 /// Faster equivalent of the operation: `x % p`, where `p == 2 ** n`.
 #[inline]
-pub const fn mod_mersenne_prime(x: u64, p: u64, n: u32) -> u64 {
+pub const fn mod_mersenne_prime(x: u64, p: u128, n: u32) -> u64 {
     debug_assert!(
-        p == (2_u64.pow(n) - 1),
+        p == (2_u128.pow(n) - 1),
         r#""p" must be a Mersenne prime, so "p == 2 ** s - 1" constraint should stand."#
     );
+    let x = x as u128;
 
     let result = (x & p) + (x >> n);
     if result >= p {
-        result - p
+        (result - p) as u64
     } else {
-        result
+        result as u64
     }
 }
 
