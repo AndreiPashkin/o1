@@ -1,38 +1,6 @@
-use rand::distributions::{Alphanumeric, Standard};
 use rand::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::Hash;
-
-/// Generate a vector of unique random elements of type `T` and size `num`.
-pub fn unique_random<T>(num: usize) -> Vec<T>
-where
-    T: Hash + Eq,
-    Standard: Distribution<T> + Clone,
-{
-    let mut rng = thread_rng();
-    let mut seen = HashSet::new();
-
-    while seen.len() < num {
-        seen.insert(rng.gen::<T>());
-    }
-
-    seen.into_iter().collect()
-}
-
-/// Generate `num` unique random strings of random length.
-pub fn unique_random_str(num: usize, min_length: usize, max_length: usize) -> Vec<String> {
-    let mut rng = thread_rng();
-    let mut seen = HashSet::new();
-    let mut iter = thread_rng().sample_iter(&Alphanumeric);
-
-    while seen.len() < num {
-        let length = rng.gen_range(min_length..=max_length);
-        let string: String = (&mut iter).take(length).map(char::from).collect();
-        seen.insert(string);
-    }
-
-    seen.into_iter().collect()
-}
 
 /// Generate `unique_keys` distributed over `num_buckets` using `hash_fn`.
 pub fn get_hash_value_distribution<K: Clone>(

@@ -149,7 +149,12 @@ mod tests {
     fn test_polynomial_universality_guarantee() {
         let p_e = 89;
         let p = 2_u128.pow(p_e) - 1;
-        let keys = unique_random_str(999999, 3, 99);
+        let keys = String::generate_many(
+            &mut SmallRng::from_entropy(),
+            &StringParams::new(3, 99),
+            999999,
+        )
+        .into_vec();
         let num_trials = 99;
         let family = Box::new(|seed: u64, num_buckets: usize| {
             let mut rng = SmallRng::seed_from_u64(seed);

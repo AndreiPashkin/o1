@@ -147,7 +147,8 @@ mod tests {
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 Box::new(move |value: &u32| multiply_shift(*value, num_bits, &seed) as usize)
             },
-            &unique_random(999999),
+            &u32::generate_many(&mut SmallRng::from_entropy(), &NumParams::default(), 999999)
+                .into_vec(),
         );
     }
 
@@ -163,7 +164,8 @@ mod tests {
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 Box::new(move |value: &u64| pair_multiply_shift(*value, num_bits, &seed) as usize)
             },
-            &unique_random(999999),
+            &u64::generate_many(&mut SmallRng::from_entropy(), &NumParams::default(), 999999)
+                .into_vec(),
         );
     }
 
@@ -181,7 +183,12 @@ mod tests {
                     multiply_shift_vector(value, num_bits, (&seed.0, seed.1)) as usize
                 })
             },
-            &unique_random(999999),
+            &<[u64; 10]>::generate_many(
+                &mut SmallRng::from_entropy(),
+                &NumParams::default(),
+                999999,
+            )
+            .into_vec(),
         );
     }
 
@@ -199,7 +206,12 @@ mod tests {
                     multiply_shift_bytes(value, num_bits, (&seed.0, seed.1)) as usize
                 })
             },
-            &unique_random(999999),
+            &<[u8; 10]>::generate_many(
+                &mut SmallRng::from_entropy(),
+                &NumParams::default(),
+                999999,
+            )
+            .into_vec(),
         );
     }
 }
