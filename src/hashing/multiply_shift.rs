@@ -9,7 +9,6 @@
 //! [Dietzfelbinger et al. (1997)]: https://linkinghub.elsevier.com/retrieve/pii/S0196677497908737
 //! [Thorup (2015)]: http://arxiv.org/abs/1504.06804
 use crate::hashing::common::extract_bits_32;
-use core::mem::{transmute, transmute_copy};
 
 // TODO: Consider implementing the weakly-universal version of multiply-shift that returns u64.
 // TODO: Generally in the future 64-bit versions will probably be needed too.
@@ -100,15 +99,15 @@ pub const fn multiply_shift_bytes<const LEN: usize>(
 ) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
 
-    if LEN == 4 {
+    if let Some(value) = value.first_chunk::<4>() {
         // Handle small byte-arrays (4 bytes) - use `multiply_shift()`.
-        let value_u32: u32 = unsafe { transmute_copy::<[u8; LEN], u32>(value) };
-        let value_seed: u64 = unsafe { transmute::<&[u64; LEN], u64>(seed.0) };
-        return multiply_shift(value_u32, num_bits, &[value_seed, seed.1]);
-    } else if LEN == 8 {
+        let value = u32::from_le_bytes(*value);
+        let value_seed: u64 = seed.0[0];
+        return multiply_shift(value, num_bits, &[value_seed, seed.1]);
+    } else if let Some(value) = value.first_chunk::<8>() {
         // Handle small byte-arrays (8 bytes) - use `pair_multiply_shift()`.
-        let value = unsafe { transmute::<&[u8; LEN], u64>(value) };
-        let value_seed: &[u64; 2] = unsafe { transmute::<&[u64; LEN], &[u64; 2]>(seed.0) };
+        let value = u64::from_le_bytes(*value);
+        let value_seed: &[u64; 2] = unsafe { seed.0.first_chunk().unwrap_unchecked() };
 
         return pair_multiply_shift(value, num_bits, &[value_seed[0], value_seed[1], seed.1]);
     }
