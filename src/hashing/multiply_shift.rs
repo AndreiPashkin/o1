@@ -62,7 +62,7 @@ pub const fn pair_multiply_shift(value: u64, num_bits: u32, seed: &[u64; 3]) -> 
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub const fn multiply_shift_vector<const LEN: usize>(
+pub fn multiply_shift_vector<const LEN: usize>(
     value: &[u64; LEN],
     num_bits: u32,
     seed: (&[u64; LEN], u64),
@@ -72,10 +72,9 @@ pub const fn multiply_shift_vector<const LEN: usize>(
     // TODO: Usage of SIMD instructions suggests itself here.
     // Compute the dot-product of the input vector and the seed vector.
     let mut sum: u64 = seed.1;
-    let mut i = 0;
-    while i < LEN {
+    #[allow(clippy::needless_range_loop)]
+    for i in 0..LEN {
         sum = sum.wrapping_add(seed.0[i].wrapping_mul(value[i]));
-        i += 1;
     }
 
     extract_bits_32(sum, num_bits)
@@ -92,7 +91,7 @@ pub const fn multiply_shift_vector<const LEN: usize>(
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub const fn multiply_shift_bytes<const LEN: usize>(
+pub fn multiply_shift_bytes<const LEN: usize>(
     value: &[u8; LEN],
     num_bits: u32,
     seed: (&[u64; LEN], u64),
@@ -114,14 +113,11 @@ pub const fn multiply_shift_bytes<const LEN: usize>(
 
     // Compute the dot-product of the input vector and the seed vector.
     let mut sum: u64 = seed.1;
-    {
-        let mut i = 0;
-        while i < LEN {
-            // TODO: Could be optimized by processing the input by 64-bit words.
-            // TODO: Same as with the vector version - SIMD instructions could be used.
-            sum = sum.wrapping_add((seed.0[i]).wrapping_mul(value[i] as u64));
-            i += 1;
-        }
+    #[allow(clippy::needless_range_loop)]
+    for i in 0..LEN {
+        // TODO: Could be optimized by processing the input by 64-bit words.
+        // TODO: Same as with the vector version - SIMD instructions could be used.
+        sum = sum.wrapping_add((seed.0[i]).wrapping_mul(value[i] as u64));
     }
 
     extract_bits_32(sum, num_bits)
