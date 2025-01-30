@@ -62,7 +62,7 @@ pub const fn pair_multiply_shift(value: u64, num_bits: u32, seed: &[u64; 3]) -> 
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub fn multiply_shift_vector<const LEN: usize>(
+pub fn multiply_shift_vector_u64<const LEN: usize>(
     value: &[u64; LEN],
     num_bits: u32,
     seed: (&[u64; LEN], u64),
@@ -91,7 +91,7 @@ pub fn multiply_shift_vector<const LEN: usize>(
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub fn multiply_shift_bytes<const LEN: usize>(
+pub fn multiply_shift_vector_u8<const LEN: usize>(
     value: &[u8; LEN],
     num_bits: u32,
     seed: (&[u64; LEN], u64),
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(not(feature = "_slow-tests"), ignore)]
-    fn test_multiply_shift_vector_universality_guarantee() {
+    fn test_multiply_shift_vector_u64_universality_guarantee() {
         check_universality_guarantee::<[u64; 10]>(
             UniversalityGuarantee::Strong,
             99,
@@ -175,7 +175,7 @@ mod tests {
                 let seed: ([u64; 10], u64) = rng.gen();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 Box::new(move |value: &[u64; 10]| {
-                    multiply_shift_vector(value, num_bits, (&seed.0, seed.1)) as usize
+                    multiply_shift_vector_u64(value, num_bits, (&seed.0, seed.1)) as usize
                 })
             },
             &<[u64; 10]>::generate_many(
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(not(feature = "_slow-tests"), ignore)]
-    fn test_multiply_shift_bytes_universality_guarantee() {
+    fn test_multiply_shift_vector_u8_universality_guarantee() {
         check_universality_guarantee::<[u8; 10]>(
             UniversalityGuarantee::Strong,
             99,
@@ -198,7 +198,7 @@ mod tests {
                 let seed: ([u64; 10], u64) = rng.gen();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 Box::new(move |value: &[u8; 10]| {
-                    multiply_shift_bytes(value, num_bits, (&seed.0, seed.1)) as usize
+                    multiply_shift_vector_u8(value, num_bits, (&seed.0, seed.1)) as usize
                 })
             },
             &<[u8; 10]>::generate_many(
