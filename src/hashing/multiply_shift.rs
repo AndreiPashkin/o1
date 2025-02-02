@@ -62,19 +62,14 @@ pub const fn pair_multiply_shift(value: u64, num_bits: u32, seed: &[u64; 3]) -> 
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub fn multiply_shift_vector_u64<const LEN: usize>(
-    value: &[u64; LEN],
-    num_bits: u32,
-    seed: (&[u64; LEN], u64),
-) -> u32 {
+pub fn multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: (&[u64], u64)) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
 
     // TODO: Usage of SIMD instructions suggests itself here.
     // Compute the dot-product of the input vector and the seed vector.
     let mut sum: u64 = seed.1;
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..LEN {
-        sum = sum.wrapping_add(seed.0[i].wrapping_mul(value[i]));
+    for (i, item) in value.iter().enumerate() {
+        sum = sum.wrapping_add(seed.0[i].wrapping_mul(*item));
     }
 
     extract_bits_32(sum, num_bits)
@@ -91,11 +86,7 @@ pub fn multiply_shift_vector_u64<const LEN: usize>(
 /// # Guarantees
 /// - Strong universality.
 #[inline]
-pub fn multiply_shift_vector_u8<const LEN: usize>(
-    value: &[u8; LEN],
-    num_bits: u32,
-    seed: (&[u64; LEN], u64),
-) -> u32 {
+pub fn multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: (&[u64], u64)) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
 
     if let Some(value) = value.first_chunk::<4>() {
@@ -106,18 +97,17 @@ pub fn multiply_shift_vector_u8<const LEN: usize>(
     } else if let Some(value) = value.first_chunk::<8>() {
         // Handle small byte-arrays (8 bytes) - use `pair_multiply_shift()`.
         let value = u64::from_le_bytes(*value);
-        let value_seed: &[u64; 2] = unsafe { seed.0.first_chunk().unwrap_unchecked() };
+        let value_seed: &[u64; 2] = seed.0.first_chunk().unwrap();
 
         return pair_multiply_shift(value, num_bits, &[value_seed[0], value_seed[1], seed.1]);
     }
 
     // Compute the dot-product of the input vector and the seed vector.
     let mut sum: u64 = seed.1;
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..LEN {
+    for (i, item) in value.iter().enumerate() {
         // TODO: Could be optimized by processing the input by 64-bit words.
         // TODO: Same as with the vector version - SIMD instructions could be used.
-        sum = sum.wrapping_add((seed.0[i]).wrapping_mul(value[i] as u64));
+        sum = sum.wrapping_add((seed.0[i]).wrapping_mul(*item as u64));
     }
 
     extract_bits_32(sum, num_bits)
