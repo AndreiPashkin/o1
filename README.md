@@ -6,8 +6,8 @@ general-purpose hash tables.
 ## Roadmap
 
 - [ ] Basic universal hashing function families.
-  - [ ] The Dietzfelbinger multiply-shift family.
-  - [ ] The polynomial family.
+  - [x] The Dietzfelbinger multiply-shift family.
+  - [x] The polynomial family.
   - [ ] Optimizations by introducing SIMD instructions.
   - [ ] Other optimizations.
 - [ ] The FKS perfect hashing scheme.

@@ -2,6 +2,11 @@
 version: '3'
 
 tasks:
+  test:
+    env:
+      RUST_BACKTRACE: full
+    cmds:
+      - cargo test --features _slow-tests
   lint:
     cmds:
       - pre-commit run --all
