@@ -11,7 +11,29 @@
 use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_prime};
 use crate::hashing::multiply_shift::{pair_multiply_shift_vector_u64, PairMultiplyShiftSeed};
 
-pub type PolynomialSeed = [u64; 1 + 1 + 64 + 1 + 64 + 1];
+pub type PolynomialSeedValue = [u64; 1 + 1 + 64 + 1 + 64 + 1];
+pub struct PolynomialSeed(PolynomialSeedValue);
+
+impl From<PolynomialSeedValue> for PolynomialSeed {
+    fn from(seed: PolynomialSeedValue) -> Self {
+        PolynomialSeed(seed)
+    }
+}
+
+impl From<&[u64]> for PolynomialSeed {
+    fn from(seed: &[u64]) -> Self {
+        let seed = seed.try_into().expect("Seed must have length of 132");
+        PolynomialSeed(seed)
+    }
+}
+
+impl Default for PolynomialSeed {
+    fn default() -> Self {
+        let mut value = [0_u64; 1 + 1 + 64 + 1 + 64 + 1];
+        value[0] = 1;
+        PolynomialSeed(value)
+    }
+}
 
 /// Hashes a 32-bit unsigned integer using the multiply-shift hashing scheme.
 ///
@@ -37,6 +59,8 @@ pub type PolynomialSeed = [u64; 1 + 1 + 64 + 1 + 64 + 1];
 pub fn polynomial(value: &[u8], num_bits: u32, seed: &PolynomialSeed) -> u32 {
     const P_E: u32 = 89;
     const P: u128 = (1_u128 << P_E) - 1;
+
+    let seed = seed.0;
 
     let a = seed[0];
     let b = seed[1];
@@ -147,7 +171,7 @@ mod tests {
                 let seed: [u64; 1 + 1 + 64 + 1 + 64 + 1] = rng.random();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 Box::new(move |value: &String| {
-                    polynomial(value.as_bytes(), num_bits, &seed) as usize
+                    polynomial(value.as_bytes(), num_bits, &seed.into()) as usize
                 })
             },
             16,
