@@ -11,7 +11,7 @@
 use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_prime};
 use crate::hashing::multiply_shift::{pair_multiply_shift_vector_u64, PairMultiplyShiftSeed};
 
-type PolynomialSeed = [u64; 1 + 1 + 64 + 1 + 64 + 1];
+pub type PolynomialSeed = [u64; 1 + 1 + 64 + 1 + 64 + 1];
 
 /// Hashes a 32-bit unsigned integer using the multiply-shift hashing scheme.
 ///
