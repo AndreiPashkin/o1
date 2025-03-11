@@ -44,7 +44,7 @@ impl Default for PolynomialSeed {
 /// - `p`: Large Mersenne prime. `2 ** 89 − 1` could be a practical value.
 /// - `p_e`: Exponent of the Mersenne prime.
 /// - `seed`: Random seed values. It should have length of `1 + 1 + 64 + 1 + 64 + 1`,
-///           so `132` in total. All the seed values should be less than 2 ** 89. And the first
+///           so `132` in total. All the seed values should be less than 2 ** 89 - 1. And the first
 ///           seed value should be greater or equal to `0`.
 ///
 /// # Guarantees
