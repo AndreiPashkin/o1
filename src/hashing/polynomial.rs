@@ -12,6 +12,7 @@ use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_pri
 use crate::hashing::multiply_shift::{pair_multiply_shift_vector_u64, PairMultiplyShiftSeed};
 
 pub type PolynomialSeedValue = [u64; 1 + 1 + 64 + 1 + 64 + 1];
+#[derive(Debug, Clone, Copy)]
 pub struct PolynomialSeed(PolynomialSeedValue);
 
 impl From<PolynomialSeedValue> for PolynomialSeed {
