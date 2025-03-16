@@ -9,7 +9,7 @@
 //! [Thorup (2015)]: https://doi.org/10.48550/arXiv.1504.06804
 
 use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_prime};
-use crate::hashing::multiply_shift::{pair_multiply_shift_vector_u64, PairMultiplyShiftSeed};
+use crate::hashing::multiply_shift::pair_multiply_shift_vector_u64;
 
 pub type PolynomialSeedValue = [u64; 1 + 1 + 64 + 1 + 64 + 1];
 #[derive(Debug, Clone, Copy)]
@@ -158,11 +158,7 @@ pub fn polynomial(value: &[u8], num_bits: u32, seed: &PolynomialSeed) -> u32 {
 }
 
 /// Hashes a 256-long chunk into a 64-bit hash using concatenation of two 32-bit hashes.
-fn hash_chunk(
-    chunk: &[u64],
-    h1_seed: &PairMultiplyShiftSeed,
-    h2_seed: &PairMultiplyShiftSeed,
-) -> u64 {
+fn hash_chunk(chunk: &[u64], h1_seed: &[u64], h2_seed: &[u64]) -> u64 {
     let chunk_hash_high = pair_multiply_shift_vector_u64(chunk, 32, h1_seed);
     let chunk_hash_low = pair_multiply_shift_vector_u64(chunk, 32, h2_seed);
     ((chunk_hash_high as u64) << 32) | (chunk_hash_low as u64)
