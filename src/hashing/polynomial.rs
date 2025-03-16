@@ -21,6 +21,21 @@ impl From<PolynomialSeedValue> for PolynomialSeed {
     }
 }
 
+impl PolynomialSeed {
+    pub fn new(a: u64, b: u64, h1_a: [u64; 64], h1_a_d: u64, h2_a: [u64; 64], h2_a_d: u64) -> Self {
+        let mut seed = [0_u64; 132];
+
+        seed[0] = a;
+        seed[1] = b;
+        seed[2..2 + 64].copy_from_slice(&h1_a);
+        seed[2 + 64] = h1_a_d;
+        seed[2 + 64 + 1..2 + 64 + 1 + 64].copy_from_slice(&h2_a);
+        seed[2 + 64 + 1 + 64] = h2_a_d;
+
+        PolynomialSeed(seed)
+    }
+}
+
 impl From<&[u64]> for PolynomialSeed {
     fn from(seed: &[u64]) -> Self {
         let seed = seed.try_into().expect("Seed must have length of 132");
