@@ -57,8 +57,6 @@ pub const fn pair_multiply_shift(value: u64, num_bits: u32, seed: &[u64; 3]) -> 
     extract_bits_64::<{ u64::BITS }>(hash_value, num_bits)
 }
 
-pub type PairMultiplyShiftSeed = [u64];
-
 /// Hashes a vector of 64-bit unsigned integers to a 32-bit hash value.
 ///
 /// # Parameters
@@ -71,11 +69,7 @@ pub type PairMultiplyShiftSeed = [u64];
 ///
 /// - Strong universality.
 #[inline]
-pub fn pair_multiply_shift_vector_u64(
-    value: &[u64],
-    num_bits: u32,
-    seed: &PairMultiplyShiftSeed,
-) -> u32 {
+pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert_eq!(
         seed.len(),
@@ -112,11 +106,7 @@ pub fn pair_multiply_shift_vector_u64(
 ///
 /// - Strong universality.
 #[inline]
-pub fn pair_multiply_shift_vector_u8(
-    value: &[u8],
-    num_bits: u32,
-    seed: &PairMultiplyShiftSeed,
-) -> u32 {
+pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert_eq!(
         value.len().div_ceil(4) + 1,
