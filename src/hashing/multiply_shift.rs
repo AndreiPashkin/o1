@@ -71,9 +71,8 @@ pub const fn pair_multiply_shift(value: u64, num_bits: u32, seed: &[u64; 3]) -> 
 #[inline]
 pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
-    debug_assert_eq!(
-        seed.len(),
-        value.len() * 2 + 1,
+    debug_assert!(
+        (value.len() * 2 + 1) <= seed.len(),
         r#""seed" must be twice as long as the input "value" + 1"#,
     );
 
@@ -108,9 +107,8 @@ pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]
 #[inline]
 pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
-    debug_assert_eq!(
-        value.len().div_ceil(4) + 1,
-        seed.len(),
+    debug_assert!(
+        (value.len().div_ceil(4) + 1) <= seed.len(),
         r#""seed" must have 1 element per 4 elements in the input "value" + 1"#,
     );
 
