@@ -115,7 +115,7 @@ pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) 
     );
 
     match value.len() {
-        0 => seed[0] as u32,
+        0 => extract_bits_64::<{ u64::BITS }>(seed[0], num_bits),
         1..=3 => {
             let mut padded = [0; 4];
             padded[..value.len()].copy_from_slice(value);
