@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiply-shift hashing algorithm.
 - Polynomial hashing algorithm.
 - Statistical testing of strong universality property.
+- `Hasher` trait - an abstraction over the hashing algorithms distinct from `core::hash::Hash` and `core::hash::Hasher`
+  traits from the standard library.
 
 ### Changed
 
