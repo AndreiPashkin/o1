@@ -3,7 +3,7 @@
 The O1 (as in _O(1)_) project focuses on implementing hashing schemes for perfect and
 general-purpose hash tables.
 
-## Roadmap
+## Roadmap to 1.0.0
 
 - [ ] Basic universal hashing function families.
   - [x] The Dietzfelbinger multiply-shift family.
