@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Hasher` trait - an abstraction over the hashing algorithms distinct from `core::hash::Hash` and `core::hash::Hasher`
   traits from the standard library.
 - `MSPHasher` - a hasher implementation based on the multiply-shift and polynomial hashing algorithms.
+- `HashMap` trait - a trait for maps based on hash-tables.
 
 ### Changed
 

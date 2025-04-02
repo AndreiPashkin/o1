@@ -39,3 +39,30 @@ where
     /// - Currently only `u32` is supported due to lack of need for larger hash values.
     fn hash(&self, value: &T) -> u32;
 }
+
+// TODO: I'm not sure about the design choice of including `Hasher` as a generic parameter.
+//       It prevents designing Maps that rely on some specific "internal" hasher or hashers that
+//       require other inputs than just seed for initialization - for example count of keys
+//       or the keys themselves.
+//       Possible solutions:
+//         - Move this parameter to the implementations completely.
+//         - Split `Hasher` into builder and hasher traits so that implementations could provide
+//           default builder for the generic parameter when needed.
+
+/// An immutable hash map.
+pub trait HashMap<K: Eq, V, H: Hasher<K>> {
+    /// Get the value associated with the given `key`.
+    fn get(&self, key: &K) -> Option<&V>;
+
+    /// Get the number of elements in the map.
+    fn len(&self) -> usize;
+
+    /// Check if the map is empty.
+    fn is_empty(&self) -> bool;
+
+    /// Get the load factor of the map.
+    fn load_factor(&self) -> f64;
+
+    /// Get the number of collisions in the map.
+    fn num_collisions(&self) -> usize;
+}
