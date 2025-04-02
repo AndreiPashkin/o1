@@ -4,3 +4,5 @@ pub use stat::*;
 pub mod generate;
 
 pub use generate::*;
+pub mod map;
+pub use map::*;

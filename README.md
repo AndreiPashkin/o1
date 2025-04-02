@@ -10,9 +10,9 @@ general-purpose hash tables.
   - [x] The polynomial family.
   - [ ] Optimizations by introducing SIMD instructions.
   - [ ] Other optimizations.
-- [ ] The FKS perfect hashing scheme.
+- [x] The FKS perfect hashing scheme.
   - [ ] Compile-time construction.
-  - [ ] Run-time construction.
+  - [x] Run-time construction.
   - [ ] Hybrid construction (with multi-stage build).
 - [ ] Benchmarking setup.
   - [ ] Against the `HashMap` from the standard library.
