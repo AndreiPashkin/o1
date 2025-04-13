@@ -160,7 +160,7 @@ pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hashing::common::num_bits_for_buckets;
+    use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
     use crate::testing::*;
     use rand::prelude::*;
     use rand_chacha::ChaCha20Rng;
@@ -178,10 +178,12 @@ mod tests {
                 seed[1] = rng.random_range(0..=u64::MAX);
 
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
-                Box::new(move |value: &u32| multiply_shift(*value, num_bits, &seed) as usize)
+                (
+                    Box::new(move |value: &u32| multiply_shift(*value, num_bits, &seed) as usize),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,
@@ -198,10 +200,14 @@ mod tests {
             &|rng, num_buckets| {
                 let seed: [u64; 3] = rng.random();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
-                Box::new(move |value: &u64| pair_multiply_shift(*value, num_bits, &seed) as usize)
+                (
+                    Box::new(move |value: &u64| {
+                        pair_multiply_shift(*value, num_bits, &seed) as usize
+                    }),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,
@@ -219,12 +225,14 @@ mod tests {
                 let seed: [u64; 32 * 2 + 1] = rng.random();
 
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
-                Box::new(move |value: &[u64; 32]| {
-                    pair_multiply_shift_vector_u64(value, num_bits, &seed) as usize
-                })
+                (
+                    Box::new(move |value: &[u64; 32]| {
+                        pair_multiply_shift_vector_u64(value, num_bits, &seed) as usize
+                    }),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,
@@ -241,12 +249,14 @@ mod tests {
             &|rng, num_buckets| {
                 let seed: [u64; 32_usize.div_ceil(4) + 1] = rng.random();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
-                Box::new(move |value: &[u8; 32]| {
-                    pair_multiply_shift_vector_u8(value, num_bits, &seed) as usize
-                })
+                (
+                    Box::new(move |value: &[u8; 32]| {
+                        pair_multiply_shift_vector_u8(value, num_bits, &seed) as usize
+                    }),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,
