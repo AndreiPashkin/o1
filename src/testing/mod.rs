@@ -6,3 +6,5 @@ pub mod generate;
 pub use generate::*;
 pub mod map;
 pub use map::*;
+pub mod equivalence;
+pub use equivalence::*;
