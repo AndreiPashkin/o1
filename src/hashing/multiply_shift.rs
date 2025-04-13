@@ -93,6 +93,56 @@ pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]
     extract_bits_64::<{ u64::BITS }>(sum, num_bits)
 }
 
+/// Hashes a vector of 64-bit unsigned integers to a 32-bit hash value.
+///
+/// Compile-time equivalent of [`pair_multiply_shift_vector_u64`].
+///
+/// # Parameters
+///
+/// - `value`: The input vector with length up to `d`.
+/// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
+/// - `seed`: Random seed. The length of the seed vector must be `d * 2 + 1`.
+///
+/// # Guarantees
+///
+/// - Strong universality.
+#[inline]
+pub const fn pair_multiply_shift_vector_u64_const(
+    value: &[u64],
+    num_bits: u32,
+    seed: &[u64],
+) -> u32 {
+    debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
+    debug_assert!(
+        (value.len() * 2 + 1) <= seed.len(),
+        r#""seed" must be twice as long as the input "value" + 1"#
+    );
+
+    let mut sum = seed[0]; // Initializing the sum with the first seed value.
+
+    let mut i = 0;
+    while i < value.len() {
+        let v = value[i];
+
+        // Seed offset calculation - need to access seed elements directly
+        let s_idx = 1 + i * 2;
+
+        // Treating 64-bit values as a pair of 32-bit values
+        let low = v;
+        let high = v >> 32;
+
+        sum = sum.wrapping_add(
+            seed[s_idx]
+                .wrapping_add(high)
+                .wrapping_mul(seed[s_idx + 1].wrapping_add(low)),
+        );
+
+        i += 1;
+    }
+
+    extract_bits_64::<{ u64::BITS }>(sum, num_bits)
+}
+
 /// Hashes a string (a vector of bytes) to a 32-bit hash value.
 ///
 /// # Parameters
@@ -261,5 +311,54 @@ mod tests {
             1000,
             0.01,
         );
+    }
+
+    #[test]
+    fn test_pair_multiply_shift_vector_u64_const_equivalence() {
+        let mut rng = ChaCha20Rng::from_os_rng();
+
+        for vec_len in [1, 4, 8, 32, 256] {
+            let non_const_family = |seed: u64, num_buckets: usize| {
+                let mut rng = ChaCha20Rng::seed_from_u64(seed);
+                let num_bits = num_bits_for_buckets(num_buckets as u32);
+                let mut seed = vec![0; vec_len * 2 + 1];
+                seed.fill_with(|| rng.random());
+
+                (
+                    Box::new(move |value: &Vec<u64>| {
+                        pair_multiply_shift_vector_u64(value.as_slice(), num_bits, &seed) as usize
+                    }) as Box<dyn Fn(&Vec<u64>) -> usize>,
+                    num_buckets_for_bits(num_bits) as usize,
+                )
+            };
+
+            let const_family = |seed: u64, num_buckets: usize| {
+                let mut rng = ChaCha20Rng::seed_from_u64(seed);
+                let num_bits = num_bits_for_buckets(num_buckets as u32);
+                let mut seed = vec![0; vec_len * 2 + 1];
+                seed.fill_with(|| rng.random());
+
+                (
+                    Box::new(move |value: &Vec<u64>| {
+                        pair_multiply_shift_vector_u64_const(value.as_slice(), num_bits, &seed)
+                            as usize
+                    }) as Box<dyn Fn(&Vec<u64>) -> usize>,
+                    num_buckets_for_bits(num_bits) as usize,
+                )
+            };
+
+            equivalence(
+                &mut rng,
+                &non_const_family,
+                &const_family,
+                &|rng: &mut ChaCha20Rng| {
+                    let mut key = vec![0_u64; vec_len];
+                    key.fill_with(|| rng.random());
+                    key
+                },
+                1000,
+                99,
+            );
+        }
     }
 }
