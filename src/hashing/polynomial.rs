@@ -170,7 +170,7 @@ fn hash_chunk(chunk: &[u64], h1_seed: &[u64], h2_seed: &[u64]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hashing::common::num_bits_for_buckets;
+    use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
     use crate::testing::*;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
@@ -185,12 +185,14 @@ mod tests {
             &|rng, num_buckets| {
                 let seed: [u64; 1 + 1 + 64 + 1 + 64 + 1] = rng.random();
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
-                Box::new(move |value: &String| {
-                    polynomial(value.as_bytes(), num_bits, &seed.into()) as usize
-                })
+                (
+                    Box::new(move |value: &String| {
+                        polynomial(value.as_bytes(), num_bits, &seed.into()) as usize
+                    }),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,

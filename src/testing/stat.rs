@@ -251,9 +251,8 @@ where
 /// Tests a hash function family for strong universality.
 pub fn strong_universality<R, K>(
     rng: &mut R,
-    family: &dyn Fn(&mut R, usize) -> Box<dyn Fn(&K) -> usize>,
+    family: &dyn Fn(&mut R, usize) -> (Box<dyn Fn(&K) -> usize>, usize),
     raw_num_buckets: usize,
-    get_num_buckets: &dyn Fn(usize) -> usize,
     num_samples_per_bucket: u32,
     num_trials: u32,
     alpha: f64,
@@ -261,7 +260,7 @@ pub fn strong_universality<R, K>(
     R: Rng,
     K: PartialEq + Default + Clone + Generate<R> + Jitter<R> + Debug,
 {
-    let num_buckets = get_num_buckets(raw_num_buckets);
+    let (_, num_buckets) = family(rng, raw_num_buckets);
     let num_possible_pairs = num_buckets.pow(2);
 
     let mut independence_statistics = Vec::new();
@@ -284,7 +283,7 @@ pub fn strong_universality<R, K>(
         let mut hys = Array1::zeros(num_trials);
 
         for i in 0..num_trials {
-            let hash_function = family(rng, num_buckets);
+            let (hash_function, _) = family(rng, num_buckets);
             let hx = hash_function(&x);
             let hy = hash_function(&y);
             hxs[i] = hx;
