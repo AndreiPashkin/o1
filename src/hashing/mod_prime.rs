@@ -46,10 +46,12 @@ mod tests {
 
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
 
-                Box::new(move |value: &u64| mod_prime(*value, num_bits, &seed) as usize)
+                (
+                    Box::new(move |value: &u64| mod_prime(*value, num_bits, &seed) as usize),
+                    num_buckets_for_bits(num_bits) as usize,
+                )
             },
             16,
-            &|num_buckets| num_buckets.next_power_of_two(),
             15,
             1000,
             0.01,
