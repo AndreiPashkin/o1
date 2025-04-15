@@ -30,3 +30,10 @@ where
             .finish()
     }
 }
+
+pub struct ConstMSPHasher<T: Eq, H>
+where
+    H: Hasher<T>,
+{
+    pub(super) state: H::State,
+}

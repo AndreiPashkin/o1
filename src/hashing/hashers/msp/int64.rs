@@ -3,7 +3,9 @@
 use super::core::MSPHasher;
 use crate::core::Hasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
+use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::pair_multiply_shift;
+use crate::random::xorshift::generate_random_array;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -27,12 +29,35 @@ impl U64State {
 
         Self { num_bits, seed }
     }
+
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+        debug_assert!(num_buckets > 0, r#""num_buckets" must be greater than 0"#);
+
+        let seed: [u64; 3] = generate_random_array!(u64, 3, seed);
+        let num_bits = num_bits_for_buckets(num_buckets);
+
+        debug_assert!(
+            num_bits >= 1 && num_bits <= 32,
+            r#""num_bits" must be [1, 32]"#
+        );
+
+        Self { num_bits, seed }
+    }
 }
 
 #[inline]
 fn hash(state: &U64State, value: u64) -> u32 {
     debug_assert!(
         (1..=32).contains(&state.num_bits),
+        r#""num_bits" must be [1, 32]"#
+    );
+    pair_multiply_shift(value, state.num_bits, &state.seed)
+}
+
+#[inline]
+const fn hash_const(state: &U64State, value: u64) -> u32 {
+    debug_assert!(
+        state.num_bits >= 1 && state.num_bits <= 32,
         r#""num_bits" must be [1, 32]"#
     );
     pair_multiply_shift(value, state.num_bits, &state.seed)
@@ -78,4 +103,55 @@ impl Hasher<i64> for MSPHasher<i64> {
     fn hash(&self, value: &i64) -> u32 {
         hash(&self.state, *value as u64)
     }
+}
+
+impl ConstMSPHasher<u64, MSPHasher<u64>> {
+    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
+        let state = U64State::from_seed_const(seed, num_buckets);
+        Self { state }
+    }
+    pub const fn from_state(state: U64State) -> Self {
+        Self { state }
+    }
+    pub const fn state(&self) -> &U64State {
+        &self.state
+    }
+    pub const fn num_buckets(&self) -> u32 {
+        num_buckets_for_bits(self.state.num_bits)
+    }
+    pub const fn hash(&self, value: &u64) -> u32 {
+        hash_const(&self.state, *value)
+    }
+}
+
+impl ConstMSPHasher<i64, MSPHasher<i64>> {
+    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
+        let state = U64State::from_seed_const(seed, num_buckets);
+        Self { state }
+    }
+    pub const fn from_state(state: U64State) -> Self {
+        Self { state }
+    }
+    pub const fn state(&self) -> &U64State {
+        &self.state
+    }
+    pub const fn num_buckets(&self) -> u32 {
+        num_buckets_for_bits(self.state.num_bits)
+    }
+    pub const fn hash(&self, value: &i64) -> u32 {
+        hash_const(&self.state, *value as u64)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::smallint::tests::impl_test_msp_hasher_equivalence;
+    use super::*;
+    use crate::testing::equivalence::hasher_equivalence;
+    use compose_idents::compose_idents;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha20Rng;
+
+    impl_test_msp_hasher_equivalence!(u64);
+    impl_test_msp_hasher_equivalence!(i64);
 }
