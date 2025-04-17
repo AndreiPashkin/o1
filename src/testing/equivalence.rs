@@ -61,3 +61,62 @@ pub fn equivalence<R, K>(
         );
     }
 }
+
+/// Generalizes hasher class equivalence testing.
+macro_rules! hasher_equivalence {
+    ($H1:ty, $H2:ty, $K:ty, $rng: expr, $gen_key:expr, $raw_num_buckets:expr, $num_trials:expr) => {{
+        use rand::Rng;
+        use std::fmt::Debug;
+        use $crate::testing::equivalence::equivalence;
+
+        pub fn _hasher_equivalence<R>(
+            rng: &mut R,
+            gen_key: &dyn Fn(&mut R) -> $K,
+            raw_num_buckets: usize,
+            num_trials: usize,
+        ) where
+            R: Rng,
+            $K: PartialEq + Debug,
+        {
+            let family1 = |seed: u64, num_buckets: usize| {
+                let seed = seed | 1;
+                let hasher = <$H1>::from_seed(seed, num_buckets as u32);
+                let state = *hasher.state();
+
+                (
+                    Box::new(move |value: &$K| {
+                        let h = <$H1>::from_state(state);
+                        h.hash(value) as usize
+                    }) as Box<dyn Fn(&$K) -> usize>,
+                    hasher.num_buckets() as usize,
+                )
+            };
+            let family2 = |seed: u64, num_buckets: usize| {
+                let seed = seed | 1;
+                let hasher1 = <$H1>::from_seed(seed, num_buckets as u32);
+                let state = *hasher1.state();
+                let hasher2 = <$H2>::from_state(state);
+
+                (
+                    Box::new(move |value: &$K| {
+                        let h = <$H2>::from_state(state);
+                        h.hash(value) as usize
+                    }) as Box<dyn Fn(&$K) -> usize>,
+                    hasher2.num_buckets() as usize,
+                )
+            };
+
+            equivalence::<R, $K>(
+                rng,
+                &family1,
+                &family2,
+                gen_key,
+                raw_num_buckets,
+                num_trials,
+            );
+        }
+
+        _hasher_equivalence($rng, &$gen_key, $raw_num_buckets, $num_trials)
+    }};
+}
+pub(crate) use hasher_equivalence;
