@@ -28,6 +28,7 @@ general-purpose hash tables.
 
 The following standards are followed to maintain the project:
 - https://www.conventionalcommits.org/en/v1.0.0/
+  - "dev" commit type to designate internal, non-user-facing features.
 - https://semver.org/
 - https://keepachangelog.com/en/1.1.0/
 - https://adr.github.io/madr/
