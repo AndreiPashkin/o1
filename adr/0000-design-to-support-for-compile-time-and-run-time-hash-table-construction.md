@@ -205,6 +205,8 @@ Compile-time construction is tricky to implement, it requires writing a lot of m
 worth to implement it for simple perfect hashing schemes that are used for small data-sets.
 Compile-time deserialization requires the most effort to implement while achieving the same as code-generation.
 
+## More Information
+
 ### Debt
 
 1. Detailed design for const-hashers and the compile-time construction API.
