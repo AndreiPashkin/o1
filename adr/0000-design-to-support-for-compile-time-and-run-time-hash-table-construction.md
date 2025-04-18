@@ -2,6 +2,7 @@
 status: "accepted"
 date: `2025-02-01`
 id: 0000
+parent:
 ---
 
 # Design to support for compile-time and run-time hash table construction
