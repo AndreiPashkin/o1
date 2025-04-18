@@ -21,3 +21,5 @@ compose-idents = "~0.0.3"
 
 [lints.clippy]
 doc_overindented_list_items = "allow"
+print_stderr = "deny"
+print_stdout = "allow"
