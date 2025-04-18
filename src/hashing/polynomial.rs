@@ -50,12 +50,20 @@ impl PolynomialSeed {
 
         PolynomialSeed(seed)
     }
+
+    pub const fn from_slice(slice: &[u64]) -> Self {
+        let mut seed = [0_u64; 132];
+        debug_assert!(slice.len() == 132, "Slice must have length of 132");
+        unsafe {
+            copy_nonoverlapping(slice.as_ptr(), seed.as_mut_ptr(), 132);
+        }
+        PolynomialSeed(seed)
+    }
 }
 
 impl From<&[u64]> for PolynomialSeed {
     fn from(seed: &[u64]) -> Self {
-        let seed = seed.try_into().expect("Seed must have length of 132");
-        PolynomialSeed(seed)
+        PolynomialSeed::from_slice(seed)
     }
 }
 
