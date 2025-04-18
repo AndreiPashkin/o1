@@ -11,6 +11,7 @@
 use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_prime};
 use crate::hashing::multiply_shift::pair_multiply_shift_vector_u64;
 use crate::hashing::multiply_shift::pair_multiply_shift_vector_u64_const;
+use std::ptr::copy_nonoverlapping;
 
 /// The type for the underlying seed value for [`PolynomialSeed`].
 pub type PolynomialSeedValue = [u64; 1 + 1 + 64 + 1 + 64 + 1];
@@ -26,14 +27,25 @@ impl From<PolynomialSeedValue> for PolynomialSeed {
 }
 
 impl PolynomialSeed {
-    pub fn new(a: u64, b: u64, h1_a: [u64; 64], h1_a_d: u64, h2_a: [u64; 64], h2_a_d: u64) -> Self {
+    pub const fn new(
+        a: u64,
+        b: u64,
+        h1_a: [u64; 64],
+        h1_a_d: u64,
+        h2_a: [u64; 64],
+        h2_a_d: u64,
+    ) -> Self {
         let mut seed = [0_u64; 132];
 
         seed[0] = a;
         seed[1] = b;
-        seed[2..2 + 64].copy_from_slice(&h1_a);
+        unsafe {
+            copy_nonoverlapping(h1_a.as_ptr(), seed.as_mut_ptr().add(2), 64);
+        }
         seed[2 + 64] = h1_a_d;
-        seed[2 + 64 + 1..2 + 64 + 1 + 64].copy_from_slice(&h2_a);
+        unsafe {
+            copy_nonoverlapping(h2_a.as_ptr(), seed.as_mut_ptr().add(2 + 64 + 1), 64);
+        }
         seed[2 + 64 + 1 + 64] = h2_a_d;
 
         PolynomialSeed(seed)
