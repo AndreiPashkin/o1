@@ -10,6 +10,7 @@ general-purpose hash tables.
   - [x] The polynomial family.
   - [ ] Optimizations by introducing SIMD instructions.
   - [ ] Other optimizations.
+- [ ] An alternative fast hashing algorithm.
 - [x] The FKS perfect hashing scheme.
   - [ ] Compile-time construction.
   - [x] Run-time construction.
