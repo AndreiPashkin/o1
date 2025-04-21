@@ -182,7 +182,7 @@ mod tests {
 
     macro_rules! impl_test_msp_hasher_equivalence_bigint {
         ($type:ty, $gen_expr:expr) => {
-            compose_idents!(test_fn = [test_msp_hasher_equivalence_, $type]; {
+            compose_idents!(test_fn = [test_msp_hasher_equivalence_, $type], {
                 #[test]
                 fn test_fn() {
                     hasher_equivalence!(
