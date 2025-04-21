@@ -174,7 +174,7 @@ pub(crate) mod tests {
 
     macro_rules! impl_test_msp_hasher_equivalence {
         ($type:ty) => {
-            compose_idents!(test_fn = [test_msp_hasher_equivalence_, $type]; {
+            compose_idents!(test_fn = [test_msp_hasher_equivalence_, $type], {
                 #[test]
                 fn test_fn() {
                     hasher_equivalence!(

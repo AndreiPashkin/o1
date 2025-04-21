@@ -72,12 +72,12 @@ pub fn test_build<
 #[macro_export]
 macro_rules! generate_map_int_tests {
     ($Map:tt, $cons: expr, $type:ty) => {
-        compose_idents!(test_fn = [test_build_get_map_, $type]; {
+        compose_idents!(test_fn = [test_build_get_map_, $type], {
             #[test]
             fn test_fn() {
-                use std::ops::Div;
                 use crate::hashing::hashers::msp::*;
                 use crate::testing::*;
+                use std::ops::Div;
 
                 use rand::rngs::ThreadRng;
                 let mut rng = rand::rng();
@@ -94,10 +94,13 @@ macro_rules! generate_map_int_tests {
                     &<$type as Generate<ThreadRng>>::GenerateParams::default(),
                     &<u128 as Generate<ThreadRng>>::GenerateParams::default(),
                 );
-                let map = test_build::<$type, u128, MSPHasher<$type>, $Map<$type, u128, MSPHasher<$type>>, _>(
-                    $cons,
-                    data.to_vec().into_boxed_slice(),
-                );
+                let map = test_build::<
+                    $type,
+                    u128,
+                    MSPHasher<$type>,
+                    $Map<$type, u128, MSPHasher<$type>>,
+                    _,
+                >($cons, data.to_vec().into_boxed_slice());
                 test_get(&mut rng, map, &data);
             }
         });
@@ -109,7 +112,7 @@ macro_rules! generate_map_int_tests {
 macro_rules! generate_map_int_special_tests {
     ($Map:tt, $cons: expr, $($type:ty),*) => {
         $(
-            compose_idents!(test_fn = [test_get_key_zero_, $type]; {
+            compose_idents!(test_fn = [test_get_key_zero_, $type], {
                 #[test]
                 fn test_fn() {
                     use std::ops::Div;
