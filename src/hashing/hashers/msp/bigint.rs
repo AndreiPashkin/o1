@@ -165,6 +165,9 @@ macro_rules! impl_multiply_shift_big_int {
                         &self.state.seed(),
                     )
                 }
+                pub const fn into_hasher(self) -> MSPHasher<$T> {
+                    MSPHasher { state: self.state }
+                }
             }
         )*
     };

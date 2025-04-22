@@ -126,6 +126,9 @@ impl ConstMSPHasher<u32, MSPHasher<u32>> {
     pub const fn state(&self) -> &SmallIntState {
         &self.state
     }
+    pub const fn into_hasher(self) -> MSPHasher<u32> {
+        MSPHasher { state: self.state }
+    }
     pub const fn num_buckets(&self) -> u32 {
         num_buckets_for_bits(self.state.num_bits)
     }
@@ -156,6 +159,9 @@ macro_rules! impl_multiply_shift_small_int_const {
                 }
                 pub const fn hash(&self, value: &$k) -> u32 {
                     hash(&self.state, *value as u32)
+                }
+                pub const fn into_hasher(self) -> MSPHasher<$k> {
+                    MSPHasher { state: self.state }
                 }
             }
         )*
