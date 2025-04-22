@@ -189,7 +189,7 @@ impl Hasher<&str> for MSPHasher<&str> {
     }
 }
 
-impl ConstMSPHasher<&[u8], MSPHasher<&[u8]>> {
+impl<'a> ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
         Self { state }
@@ -206,9 +206,12 @@ impl ConstMSPHasher<&[u8], MSPHasher<&[u8]>> {
     pub const fn hash(&self, value: &&[u8]) -> u32 {
         hash_const(&self.state, value)
     }
+    pub const fn into_hasher(self) -> MSPHasher<&'a [u8]> {
+        MSPHasher { state: self.state }
+    }
 }
 
-impl ConstMSPHasher<&str, MSPHasher<&str>> {
+impl<'a> ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
         Self { state }
@@ -224,6 +227,9 @@ impl ConstMSPHasher<&str, MSPHasher<&str>> {
     }
     pub const fn hash(&self, value: &&str) -> u32 {
         hash_const(&self.state, value.as_bytes())
+    }
+    pub const fn into_hasher(self) -> MSPHasher<&'a str> {
+        MSPHasher { state: self.state }
     }
 }
 

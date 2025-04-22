@@ -122,6 +122,9 @@ impl ConstMSPHasher<u64, MSPHasher<u64>> {
     pub const fn hash(&self, value: &u64) -> u32 {
         hash_const(&self.state, *value)
     }
+    pub const fn into_hasher(self) -> MSPHasher<u64> {
+        MSPHasher { state: self.state }
+    }
 }
 
 impl ConstMSPHasher<i64, MSPHasher<i64>> {
@@ -140,6 +143,9 @@ impl ConstMSPHasher<i64, MSPHasher<i64>> {
     }
     pub const fn hash(&self, value: &i64) -> u32 {
         hash_const(&self.state, *value as u64)
+    }
+    pub const fn into_hasher(self) -> MSPHasher<i64> {
+        MSPHasher { state: self.state }
     }
 }
 
