@@ -4,9 +4,18 @@ use crate::fks::FKSMap;
 use bitvec::prelude::*;
 
 /// Deinitializes only the initialized slots and skips the non-initialized ones.
-impl<K: Eq, V, H: Hasher<K>> Drop for FKSMap<K, V, H> {
+impl<K: Eq, V, H: Hasher<K>> Drop for FKSMap<'_, K, V, H> {
     fn drop(&mut self) {
-        for bucket in &self.buckets {
+        debug_assert!(
+            self.slots.is_borrowed() && self.buckets.is_borrowed()
+                || self.slots.is_owned() && self.buckets.is_owned(),
+            "FKSMap's memory allocation is inconsistent."
+        );
+
+        if self.slots.is_borrowed() && self.buckets.is_borrowed() {
+            return;
+        }
+        for bucket in self.buckets.as_slice() {
             if bucket.num_slots() == 0 {
                 continue;
             }

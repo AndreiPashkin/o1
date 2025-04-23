@@ -5,7 +5,7 @@ use bitvec::prelude::*;
 use bitvec::view::BitView;
 use std::fmt::Debug;
 
-impl<K: Eq + Debug, V, H: Hasher<K>> HashMap<K, V, H> for FKSMap<K, V, H> {
+impl<K: Eq + Debug, V, H: Hasher<K>> HashMap<K, V, H> for FKSMap<'_, K, V, H> {
     fn get(&self, key: &K) -> Option<&V> {
         let bucket_idx = self.l1_hasher.hash(key) as usize;
         let bucket = &self.buckets[bucket_idx];

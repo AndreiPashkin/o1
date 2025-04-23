@@ -1,5 +1,6 @@
 //! Declares core types for [`FKSMap`].
 use crate::core::Hasher;
+use crate::utils::maybe_owned_slice::MaybeOwnedSliceMut;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
@@ -35,13 +36,13 @@ use std::mem::MaybeUninit;
 ///              book_reviews.len());
 /// }
 /// ```
-pub struct FKSMap<K: Eq, V, H: Hasher<K>> {
+pub struct FKSMap<'a, K: Eq, V, H: Hasher<K>> {
     pub(super) l1_hasher: H,
-    pub(super) buckets: Vec<Bucket<K, H>>,
-    pub(super) slots: Vec<MaybeUninit<(K, V)>>,
+    pub(super) buckets: MaybeOwnedSliceMut<'a, Bucket<K, H>>,
+    pub(super) slots: MaybeOwnedSliceMut<'a, MaybeUninit<(K, V)>>,
 }
 
-impl<K, V, H> Debug for FKSMap<K, V, H>
+impl<K, V, H> Debug for FKSMap<'_, K, V, H>
 where
     K: Eq + Debug,
     V: Debug,
