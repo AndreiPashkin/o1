@@ -8,9 +8,10 @@
 //! [Dietzfelbinger et al. (1992)]: https://doi.org/10.1007/3-540-55719-9_77
 //! [Thorup (2015)]: https://doi.org/10.48550/arXiv.1504.06804
 
-use crate::hashing::common::{extract_bits_128, extract_bits_64, mod_mersenne_prime};
+use crate::hashing::common::{extract_bits_128, extract_bits_64};
 use crate::hashing::multiply_shift::pair_multiply_shift_vector_u64;
 use crate::hashing::multiply_shift::pair_multiply_shift_vector_u64_const;
+use crate::utils::bit_hacks::mod_mersenne_prime;
 use std::ptr::copy_nonoverlapping;
 
 /// The type for the underlying seed value for [`PolynomialSeed`].
