@@ -10,7 +10,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 
-impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<K, V, H> {
+impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<'_, K, V, H> {
     const MAX_KEYS_PER_BUCKET: u32 = 5;
 
     /// Attempts to find the L1 hash function.
@@ -199,8 +199,8 @@ impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<K, V, H> {
 
         Ok(Self {
             l1_hasher,
-            buckets,
-            slots,
+            buckets: buckets.into(),
+            slots: slots.into(),
         })
     }
 }
@@ -215,7 +215,7 @@ mod tests {
 
     fn factory<'a, K: Eq + Debug, V: Copy + Debug, H: Hasher<K>>(
         data: Box<[(K, V)]>,
-    ) -> FKSMap<K, V, H> {
+    ) -> FKSMap<'a, K, V, H> {
         FKSMap::new(data, 0, 0.75).unwrap()
     }
 
