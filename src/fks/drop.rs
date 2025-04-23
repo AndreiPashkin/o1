@@ -16,9 +16,5 @@ impl<K: Eq, V, H: Hasher<K>> Drop for FKSMap<K, V, H> {
                 unsafe { self.slots[data_idx].assume_init_drop() };
             }
         }
-
-        unsafe {
-            self.slots.set_len(0);
-        }
     }
 }
