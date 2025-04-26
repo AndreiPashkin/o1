@@ -82,3 +82,14 @@ This document is dedicated to describing these challenges and solutions for how 
 
 There are not a lot of options and all the techniques described above are necessary to use to achieve a parity
 with non-const implementation.
+
+## More Information
+
+### Additional problems and solutions
+
+- Generation of pseudo-random numbers at compile-time
+- Manipulation with bit-arrays at compile-time
+
+None of these are solvable with existing third-party crates but at the same time there are not fundamental limitations
+of the language that prevents from implementing them. I consider these problems to be trivial but still want
+to mention.
