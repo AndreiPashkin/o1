@@ -11,7 +11,7 @@ use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
     pair_multiply_shift_vector_u8, pair_multiply_shift_vector_u8_const,
 };
-use crate::random::xorshift::generate_random_array;
+use crate::utils::xorshift::generate_random_array;
 use core::mem::size_of;
 use rand::Rng;
 use rand_xoshiro::rand_core::SeedableRng;

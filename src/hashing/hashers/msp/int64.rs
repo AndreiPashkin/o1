@@ -5,7 +5,7 @@ use crate::core::Hasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::pair_multiply_shift;
-use crate::random::xorshift::generate_random_array;
+use crate::utils::xorshift::generate_random_array;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
