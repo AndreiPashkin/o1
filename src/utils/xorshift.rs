@@ -3,6 +3,9 @@
 //!
 //! [Marsaglia (2003)]: https://www.jstatsoft.org/article/view/v008i14
 //! [Metcalf (n.d.)]: http://www.retroprogramming.com/2017/07/xorshift-pseudorandom-numbers-in-z80.html
+
+#![allow(unused_macros, unused_imports)]
+
 pub struct XorShift<T: Default + Copy> {
     state: T,
 }
@@ -60,7 +63,7 @@ impl XorShift<u64> {
 
 macro_rules! generate_random {
     ($ty:ty, $seed:expr) => {{
-        use crate::random::xorshift::XorShift;
+        use crate::utils::xorshift::XorShift;
 
         let mut rng = XorShift::<$ty>::new($seed);
         rng.next()
@@ -70,7 +73,7 @@ pub(crate) use generate_random;
 
 macro_rules! generate_random_array {
     ($ty:ty, $len:expr, $seed:expr) => {{
-        use crate::random::xorshift::XorShift;
+        use crate::utils::xorshift::XorShift;
 
         let mut rng = XorShift::<$ty>::new($seed);
         let mut arr: [$ty; $len] = [0; $len];

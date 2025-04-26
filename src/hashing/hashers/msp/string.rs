@@ -12,7 +12,7 @@ use crate::hashing::multiply_shift::{
     pair_multiply_shift_vector_u8, pair_multiply_shift_vector_u8_const,
 };
 use crate::hashing::polynomial::{polynomial, polynomial_const, PolynomialSeed};
-use crate::random::xorshift::generate_random_array;
+use crate::utils::xorshift::generate_random_array;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
