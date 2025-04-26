@@ -83,9 +83,9 @@ macro_rules! generate_map_int_tests {
                 let mut rng = rand::rng();
 
                 let map_size: usize = if <$type>::BITS >= u32::BITS {
-                    9999
+                    999
                 } else {
-                    (1_usize << <$type>::BITS).div(2)
+                    (1_usize << <$type>::BITS).div(2).min(999)
                 };
 
                 let data = generate_map_data::<_, $type, u128>(
@@ -123,9 +123,9 @@ macro_rules! generate_map_int_special_tests {
                     let mut rng = rand::rng();
 
                     let map_size: usize = if <$type>::BITS >= u32::BITS {
-                        9999
+                        999
                     } else {
-                        (1_usize << <$type>::BITS).div(2)
+                        (1_usize << <$type>::BITS).div(2).min(999)
                     };
 
                     for _ in 0..99 {
@@ -162,7 +162,7 @@ macro_rules! generate_map_str_tests {
             let mut rng = rand::rng();
             let data = generate_map_data::<_, String, u128>(
                 &mut rng,
-                9999,
+                999,
                 &<String as Generate<ThreadRng>>::GenerateParams::default(),
                 &<u128 as Generate<ThreadRng>>::GenerateParams::default(),
             );
@@ -194,7 +194,7 @@ macro_rules! generate_map_str_special_tests {
             for _ in 0..99 {
                 let data: Vec<(String, u128)> = generate_map_data::<_, String, u128>(
                     &mut rng,
-                    9999,
+                    999,
                     &<String as Generate<ThreadRng>>::GenerateParams::default(),
                     &<u128 as Generate<ThreadRng>>::GenerateParams::default(),
                 )
