@@ -5,4 +5,4 @@ pub mod hashing;
 mod random;
 #[cfg(test)]
 pub mod testing;
-mod utils;
+pub mod utils;
