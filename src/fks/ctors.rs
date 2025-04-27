@@ -42,17 +42,14 @@ impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<'_, K, V, H> {
                 buckets.set_len(num_buckets as usize);
             }
 
-            let mut key_to_bucket = vec![bitvec![0; num_buckets as usize]; data.len()];
             let mut bucket_to_keys = vec![bitvec![0; data.len()]; num_buckets as usize];
 
             let mut max_keys_per_bucket: u64 = 0;
 
-            key_to_bucket.iter_mut().for_each(|v| v.fill(false));
             bucket_to_keys.iter_mut().for_each(|v| v.fill(false));
 
             for (i, (k, _)) in data.iter().enumerate() {
                 let hash = l1_hasher.hash(k);
-                key_to_bucket[i].set(hash as usize, true);
                 bucket_to_keys[hash as usize].set(i, true);
             }
 
