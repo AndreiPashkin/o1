@@ -163,7 +163,7 @@ impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<'_, K, V, H> {
                 bucket_to_keys = l1_result.1;
                 break;
             }
-            load_factor -= 0.5;
+            load_factor -= 0.05;
 
             if load_factor < min_load_factor {
                 return Err(UnableToFindHashFunction);
