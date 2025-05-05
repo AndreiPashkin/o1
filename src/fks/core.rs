@@ -37,9 +37,12 @@ use std::mem::MaybeUninit;
 /// }
 /// ```
 pub struct FKSMap<'a, K: Eq, V, H: Hasher<K>> {
-    pub(super) l1_hasher: H,
-    pub(super) buckets: MaybeOwnedSliceMut<'a, Bucket<K, H>>,
-    pub(super) slots: MaybeOwnedSliceMut<'a, MaybeUninit<(K, V)>>,
+    #[doc(hidden)]
+    pub l1_hasher: H,
+    #[doc(hidden)]
+    pub buckets: MaybeOwnedSliceMut<'a, Bucket<K, H>>,
+    #[doc(hidden)]
+    pub slots: MaybeOwnedSliceMut<'a, MaybeUninit<(K, V)>>,
 }
 
 impl<K, V, H> Debug for FKSMap<'_, K, V, H>
@@ -62,16 +65,16 @@ where
 /// Each bucket is associated with an output of the L1 hash function and a number of slots that
 /// contain the collided keys.
 #[derive(Debug)]
-pub(super) struct Bucket<K: Eq, H: Hasher<K>> {
+pub struct Bucket<K: Eq, H: Hasher<K>> {
     /// The offset of the first slot in the bucket.
-    pub(super) offset: usize,
+    pub offset: usize,
     /// A bit-mask of the occupied slots in the bucket.
-    pub(super) slots: u8,
+    pub slots: u8,
     /// A number of slots in the bucket.
-    pub(super) num_slots: u8,
+    pub num_slots: u8,
     /// L2 hasher that contains parameters for the L2 hash function.
-    pub(super) hasher: H,
-    pub(super) key_type: PhantomData<K>,
+    pub hasher: H,
+    pub key_type: PhantomData<K>,
 }
 
 impl<K: Eq, H: Hasher<K>> Bucket<K, H> {

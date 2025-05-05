@@ -40,6 +40,13 @@ where
     fn hash(&self, value: &T) -> u32;
 }
 
+pub trait ConstHasher<T>
+where
+    T: Eq,
+{
+    type HasherType: Hasher<T>;
+}
+
 // TODO: I'm not sure about the design choice of including `Hasher` as a generic parameter.
 //       It prevents designing Maps that rely on some specific "internal" hasher or hashers that
 //       require other inputs than just seed for initialization - for example count of keys

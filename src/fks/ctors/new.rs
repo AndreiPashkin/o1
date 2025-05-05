@@ -2,7 +2,8 @@
 use crate::core::Hasher;
 use crate::error::O1Error;
 use crate::error::O1Error::UnableToFindHashFunction;
-use crate::fks::{Bucket, FKSMap};
+use crate::fks::core::Bucket;
+use crate::fks::FKSMap;
 use bitvec::prelude::*;
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;

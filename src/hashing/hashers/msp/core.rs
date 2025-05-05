@@ -2,6 +2,7 @@ use crate::core::Hasher;
 use std::fmt::{Debug, Formatter};
 
 /// Hasher based on multiply-shift and polynomial hashing.
+#[derive(Clone)]
 pub struct MSPHasher<T: Eq>
 where
     MSPHasher<T>: Hasher<T>,
@@ -31,6 +32,7 @@ where
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct ConstMSPHasher<T: Eq, H>
 where
     H: Hasher<T>,

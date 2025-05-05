@@ -5,7 +5,7 @@
 //! Internally it treats big integers as vectors uses the [`multiply_shift_u8`] hash function.
 
 use super::core::MSPHasher;
-use crate::core::Hasher;
+use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
@@ -168,12 +168,28 @@ macro_rules! impl_multiply_shift_big_int {
                 pub const fn into_hasher(self) -> MSPHasher<$T> {
                     MSPHasher { state: self.state }
                 }
+                pub const fn to_hasher(&self) -> MSPHasher<$T> {
+                    MSPHasher { state: self.state }
+                }
             }
         )*
     };
 }
 
 impl_multiply_shift_big_int!(u128, i128, usize, isize);
+
+/// Implement ConstHasher trait for big integer types
+macro_rules! impl_const_hasher_for_bigint {
+    ($($T:ty),*) => {
+        $(
+            impl ConstHasher<$T> for ConstMSPHasher<$T, MSPHasher<$T>> {
+                type HasherType = MSPHasher<$T>;
+            }
+        )*
+    };
+}
+
+impl_const_hasher_for_bigint!(u128, i128, usize, isize);
 
 #[cfg(test)]
 mod tests {
