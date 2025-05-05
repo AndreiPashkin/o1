@@ -7,7 +7,7 @@
 //!   first, there should be specialized hash functions for these cases, so it's a TODO.
 
 use super::core::MSPHasher;
-use crate::core::Hasher;
+use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::multiply_shift;
@@ -115,6 +115,10 @@ macro_rules! impl_multiply_shift_small_int {
 
 impl_multiply_shift_small_int!(i32, u16, i16, u8, i8);
 
+impl ConstHasher<u32> for ConstMSPHasher<u32, MSPHasher<u32>> {
+    type HasherType = MSPHasher<u32>;
+}
+
 impl ConstMSPHasher<u32, MSPHasher<u32>> {
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = SmallIntState::from_seed_const(seed, num_buckets);
@@ -127,6 +131,9 @@ impl ConstMSPHasher<u32, MSPHasher<u32>> {
         &self.state
     }
     pub const fn into_hasher(self) -> MSPHasher<u32> {
+        MSPHasher { state: self.state }
+    }
+    pub const fn to_hasher(&self) -> MSPHasher<u32> {
         MSPHasher { state: self.state }
     }
     pub const fn num_buckets(&self) -> u32 {
@@ -163,12 +170,28 @@ macro_rules! impl_multiply_shift_small_int_const {
                 pub const fn into_hasher(self) -> MSPHasher<$k> {
                     MSPHasher { state: self.state }
                 }
+                pub const fn to_hasher(&self) -> MSPHasher<$k> {
+                    MSPHasher { state: self.state }
+                }
             }
         )*
     };
 }
 
 impl_multiply_shift_small_int_const!(i32, u16, i16, u8, i8);
+
+/// Implement ConstHasher trait for all integer types
+macro_rules! impl_const_hasher_for_int {
+    ($($k:ty),*) => {
+        $(
+            impl ConstHasher<$k> for ConstMSPHasher<$k, MSPHasher<$k>> {
+                type HasherType = MSPHasher<$k>;
+            }
+        )*
+    };
+}
+
+impl_const_hasher_for_int!(i32, u16, i16, u8, i8);
 
 #[cfg(test)]
 pub(crate) mod tests {

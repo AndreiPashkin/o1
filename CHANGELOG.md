@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   traits from the standard library.
 - `MSPHasher` - a hasher implementation based on the multiply-shift and polynomial hashing algorithms.
 - `HashMap` trait - a trait for maps based on hash-tables.
-- `FKSMap` - a hash-map based on the FKS perfect hashing scheme.
+- `FKSMap` - a hash-map based on the FKS perfect hashing scheme - with both runtime and compile-time constructors.
 
 ### Changed
 

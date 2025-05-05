@@ -5,7 +5,7 @@
 //! Internally it uses the [`polynomial`] hash function.
 
 use super::core::MSPHasher;
-use crate::core::Hasher;
+use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
@@ -168,7 +168,7 @@ impl Hasher<String> for MSPHasher<String> {
     }
 }
 
-impl Hasher<&str> for MSPHasher<&str> {
+impl<'a> Hasher<&'a str> for MSPHasher<&'a str> {
     type State = StringState;
 
     fn from_seed(seed: u64, num_buckets: u32) -> Self {
@@ -211,6 +211,10 @@ impl<'a> ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
     }
 }
 
+impl<'a> ConstHasher<&'a [u8]> for ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
+    type HasherType = MSPHasher<&'a [u8]>;
+}
+
 impl<'a> ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
@@ -231,6 +235,13 @@ impl<'a> ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
     pub const fn into_hasher(self) -> MSPHasher<&'a str> {
         MSPHasher { state: self.state }
     }
+    pub const fn to_hasher(&self) -> MSPHasher<&'a str> {
+        MSPHasher { state: self.state }
+    }
+}
+
+impl<'a> ConstHasher<&'a str> for ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
+    type HasherType = MSPHasher<&'a str>;
 }
 
 #[cfg(test)]

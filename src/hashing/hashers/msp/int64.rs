@@ -1,7 +1,7 @@
 //! Implements Hasher for u64 and i64 using [`pair_multiply_shift`] hash-function.
 
 use super::core::MSPHasher;
-use crate::core::Hasher;
+use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::pair_multiply_shift;
@@ -125,6 +125,9 @@ impl ConstMSPHasher<u64, MSPHasher<u64>> {
     pub const fn into_hasher(self) -> MSPHasher<u64> {
         MSPHasher { state: self.state }
     }
+    pub const fn to_hasher(&self) -> MSPHasher<u64> {
+        MSPHasher { state: self.state }
+    }
 }
 
 impl ConstMSPHasher<i64, MSPHasher<i64>> {
@@ -147,6 +150,17 @@ impl ConstMSPHasher<i64, MSPHasher<i64>> {
     pub const fn into_hasher(self) -> MSPHasher<i64> {
         MSPHasher { state: self.state }
     }
+    pub const fn to_hasher(&self) -> MSPHasher<i64> {
+        MSPHasher { state: self.state }
+    }
+}
+
+impl ConstHasher<u64> for ConstMSPHasher<u64, MSPHasher<u64>> {
+    type HasherType = MSPHasher<u64>;
+}
+
+impl ConstHasher<i64> for ConstMSPHasher<i64, MSPHasher<i64>> {
+    type HasherType = MSPHasher<i64>;
 }
 
 #[cfg(test)]

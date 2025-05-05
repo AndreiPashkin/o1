@@ -12,7 +12,7 @@ general-purpose hash tables.
   - [ ] Other optimizations.
 - [ ] An alternative fast hashing algorithm.
 - [x] The FKS perfect hashing scheme.
-  - [ ] Compile-time construction.
+  - [x] Compile-time construction.
   - [x] Run-time construction.
   - [ ] Hybrid construction (with multi-stage build).
 - [ ] Benchmarking setup.
