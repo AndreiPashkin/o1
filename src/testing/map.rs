@@ -242,3 +242,62 @@ macro_rules! generate_map_tests {
         generate_map_str_special_tests!($Map, $factory);
     };
 }
+
+/// Generates tests for a static map.
+///
+/// It is supposed to be used in combination with pre-defined datasets from [`o1::testing::data`]
+/// used to instantiate the static maps before invoking this macro.
+#[macro_export]
+macro_rules! generate_static_map_tests {
+    (
+        $u8_map:expr,
+        $u8_data:expr,
+        $i8_map:expr,
+        $i8_data:expr,
+        $u16_map:expr,
+        $u16_data:expr,
+        $i16_map:expr,
+        $i16_data:expr,
+        $u32_map:expr,
+        $u32_data:expr,
+        $i32_map:expr,
+        $i32_data:expr,
+        $u64_map:expr,
+        $u64_data:expr,
+        $i64_map:expr,
+        $i64_data:expr,
+        $u128_map:expr,
+        $u128_data:expr,
+        $i128_map:expr,
+        $i128_data:expr,
+        $str_map:expr,
+        $str_data:expr$(,)?
+    ) => {
+        use compose_idents::compose_idents;
+
+        macro_rules! generate_tests_for_type {
+            ($type:ident, $map:expr, $data:expr) => {
+                compose_idents!(test_fn = [test_static_map_, $type], {
+                    #[test]
+                    fn test_fn() {
+                        for (key, val) in &$data {
+                            assert_eq!($map.get(key), Some(val), "Key: {:?}", key);
+                        }
+                    }
+                });
+            };
+        }
+
+        generate_tests_for_type!(u8, $u8_map, $u8_data);
+        generate_tests_for_type!(i8, $i8_map, $i8_data);
+        generate_tests_for_type!(u16, $u16_map, $u16_data);
+        generate_tests_for_type!(i16, $i16_map, $i16_data);
+        generate_tests_for_type!(u32, $u32_map, $u32_data);
+        generate_tests_for_type!(i32, $i32_map, $i32_data);
+        generate_tests_for_type!(u64, $u64_map, $u64_data);
+        generate_tests_for_type!(i64, $i64_map, $i64_data);
+        generate_tests_for_type!(u128, $u128_map, $u128_data);
+        generate_tests_for_type!(i128, $i128_map, $i128_data);
+        generate_tests_for_type!(str, $str_map, $str_data);
+    };
+}
