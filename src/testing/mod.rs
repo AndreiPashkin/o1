@@ -8,3 +8,4 @@ pub mod map;
 pub use map::*;
 pub mod equivalence;
 pub use equivalence::*;
+pub mod data;
