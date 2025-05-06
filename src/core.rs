@@ -12,7 +12,6 @@
 pub trait Hasher<T>
 where
     Self: Default,
-    T: Eq,
 {
     /// State of the hasher instance.
     ///
@@ -40,10 +39,7 @@ where
     fn hash(&self, value: &T) -> u32;
 }
 
-pub trait ConstHasher<T>
-where
-    T: Eq,
-{
+pub trait ConstHasher<T> {
     type HasherType: Hasher<T>;
 }
 

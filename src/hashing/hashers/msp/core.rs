@@ -3,14 +3,14 @@ use std::fmt::{Debug, Formatter};
 
 /// Hasher based on multiply-shift and polynomial hashing.
 #[derive(Clone)]
-pub struct MSPHasher<T: Eq>
+pub struct MSPHasher<T>
 where
     MSPHasher<T>: Hasher<T>,
 {
     pub(super) state: <MSPHasher<T> as Hasher<T>>::State,
 }
 
-impl<T: Eq> Default for MSPHasher<T>
+impl<T> Default for MSPHasher<T>
 where
     MSPHasher<T>: Hasher<T>,
 {
@@ -21,7 +21,6 @@ where
 
 impl<T> Debug for MSPHasher<T>
 where
-    T: Eq,
     MSPHasher<T>: Hasher<T>,
     <MSPHasher<T> as Hasher<T>>::State: Debug,
 {
@@ -33,7 +32,7 @@ where
 }
 
 #[derive(Copy, Clone)]
-pub struct ConstMSPHasher<T: Eq, H>
+pub struct ConstMSPHasher<T, H>
 where
     H: Hasher<T>,
 {
