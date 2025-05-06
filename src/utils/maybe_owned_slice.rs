@@ -2,6 +2,13 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
 /// A smart pointer that holds onto either an owned heap-allocated slice or a borrowed slice.
+///
+/// # Notes
+///
+/// - Why does `Borrowed` variant hold onto a mutable slice? It is made to mirror `Owned` variant
+///   that has an option to borrow the slice as mutable (currently utilized in `src/fks/drop.rs`).
+///   There is no use-case where `Borrowed` variant is borrowed as mutable, but it has been done for
+///   consistency.
 pub enum MaybeOwnedSliceMut<'a, T> {
     Borrowed(&'a mut [T]),
     Owned(Box<[T]>),
