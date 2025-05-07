@@ -186,6 +186,7 @@ macro_rules! generate_map_str_special_tests {
         fn test_get_key_zero_str() {
             use crate::hashing::hashers::msp::*;
             use crate::testing::*;
+            use std::borrow::Borrow;
 
             use rand::rngs::ThreadRng;
 
@@ -209,7 +210,7 @@ macro_rules! generate_map_str_special_tests {
                     $Map<String, u128, MSPHasher<String>>,
                     _,
                 >($factory, data.into_boxed_slice());
-                assert_eq!(map.get(&"".to_string()), None);
+                assert_eq!(map.get::<str, MSPHasher<&str>>(""), None);
             }
         }
     };

@@ -15,6 +15,7 @@ use crate::hashing::polynomial::{polynomial, polynomial_const, PolynomialSeed};
 use crate::utils::xorshift::generate_random_array;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
+use std::borrow::Borrow;
 
 const N: u32 = 89;
 const P: u128 = 2_u128.pow(N) - 1;
@@ -186,6 +187,20 @@ impl<'a> Hasher<&'a str> for MSPHasher<&'a str> {
     }
     fn hash(&self, value: &&str) -> u32 {
         hash(&self.state, value.as_bytes())
+    }
+}
+
+impl<'a> Borrow<MSPHasher<&'a str>> for MSPHasher<String> {
+    #[inline]
+    fn borrow(&self) -> &MSPHasher<&'a str> {
+        unsafe { &*(self as *const MSPHasher<String> as *const MSPHasher<&str>) }
+    }
+}
+
+impl<'a> Borrow<MSPHasher<&'a [u8]>> for MSPHasher<String> {
+    #[inline]
+    fn borrow(&self) -> &MSPHasher<&'a [u8]> {
+        unsafe { &*(self as *const MSPHasher<String> as *const MSPHasher<&[u8]>) }
     }
 }
 

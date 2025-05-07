@@ -1,5 +1,7 @@
 //! Core trait and type declarations for the whole project.
 
+use std::borrow::Borrow;
+
 /// Hasher for the specific data-type.
 ///
 /// Differs from [`core::hash::Hasher`] in the way that it is specific for a certain type and is not
@@ -12,6 +14,7 @@
 pub trait Hasher<T>
 where
     Self: Default,
+    T: ?Sized,
 {
     /// State of the hasher instance.
     ///
@@ -55,7 +58,12 @@ pub trait ConstHasher<T> {
 /// An immutable hash map.
 pub trait HashMap<K: Eq, V, H: Hasher<K>> {
     /// Get the value associated with the given `key`.
-    fn get(&self, key: &K) -> Option<&V>;
+    fn get<Q, QH>(&self, key: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        Q: ?Sized + Eq,
+        QH: for<'a> Hasher<&'a Q>,
+        H: Borrow<QH>;
 
     /// Get the number of elements in the map.
     fn len(&self) -> usize;

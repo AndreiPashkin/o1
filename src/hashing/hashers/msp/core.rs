@@ -3,6 +3,7 @@ use std::fmt::{Debug, Formatter};
 
 /// Hasher based on multiply-shift and polynomial hashing.
 #[derive(Clone)]
+#[repr(C)]
 pub struct MSPHasher<T>
 where
     MSPHasher<T>: Hasher<T>,
