@@ -2,6 +2,8 @@
 use rand::prelude::*;
 use std::fmt::Debug;
 
+type HashFunctionFamily<K> = dyn Fn(u64, usize) -> (Box<dyn Fn(&K) -> usize>, usize);
+
 /// Verifies that two hash function families produce identical outputs for the same inputs.
 ///
 /// # Parameters
@@ -21,8 +23,8 @@ use std::fmt::Debug;
 /// - For any (seed, key) pair, the hash values differ between implementations
 pub fn equivalence<R, K>(
     rng: &mut R,
-    family1: &dyn Fn(u64, usize) -> (Box<dyn Fn(&K) -> usize>, usize),
-    family2: &dyn Fn(u64, usize) -> (Box<dyn Fn(&K) -> usize>, usize),
+    family1: &HashFunctionFamily<K>,
+    family2: &HashFunctionFamily<K>,
     gen_key: &dyn Fn(&mut R) -> K,
     raw_num_buckets: usize,
     num_trials: usize,
