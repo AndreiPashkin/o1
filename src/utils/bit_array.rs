@@ -458,7 +458,7 @@ macro_rules! bit_array {
         use $crate::utils::bit_array::{BitArray, BitStore};
 
         const NUM_BUCKETS: usize =
-            ($num_bits + <$store as BitStore>::BITS - 1) / <$store as BitStore>::BITS;
+            ($num_bits as usize).div_ceil(<$store as BitStore>::BITS as usize);
 
         BitArray::<$store, NUM_BUCKETS>::new()
     }};
