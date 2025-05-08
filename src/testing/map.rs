@@ -71,12 +71,11 @@ pub fn test_build<
 /// Generates tests for a map type for integer keys.
 #[macro_export]
 macro_rules! generate_map_int_tests {
-    ($Map:tt, $cons: expr, $type:ty) => {
+    ($Map:tt, $Hasher:tt, $cons: expr, $type:ty) => {
         compose_idents!(test_fn = [test_build_get_map_, $type], {
             #[test]
             fn test_fn() {
                 use std::ops::Div;
-                use $crate::hashing::hashers::msp::*;
                 use $crate::testing::*;
 
                 use rand::rngs::ThreadRng;
@@ -97,8 +96,8 @@ macro_rules! generate_map_int_tests {
                 let map = test_build::<
                     $type,
                     u128,
-                    MSPHasher<$type>,
-                    $Map<$type, u128, MSPHasher<$type>>,
+                    $Hasher<$type>,
+                    $Map<$type, u128, $Hasher<$type>>,
                     _,
                 >($cons, data.to_vec().into_boxed_slice());
                 test_get(&mut rng, map, &data);
@@ -110,13 +109,12 @@ macro_rules! generate_map_int_tests {
 /// Generates tests of special cases for a map type for integer keys.
 #[macro_export]
 macro_rules! generate_map_int_special_tests {
-    ($Map:tt, $cons: expr, $($type:ty),*) => {
+    ($Map:tt, $Hasher:tt, $cons: expr, $($type:ty),*) => {
         $(
             compose_idents!(test_fn = [test_get_key_zero_, $type], {
                 #[test]
                 fn test_fn() {
                     use std::ops::Div;
-                    use $crate::hashing::hashers::msp::*;
                     use $crate::testing::*;
 
                     use rand::rngs::ThreadRng;
@@ -135,7 +133,7 @@ macro_rules! generate_map_int_special_tests {
                             &<$type as Generate<ThreadRng>>::GenerateParams::default(),
                             &<u128 as Generate<ThreadRng>>::GenerateParams::default(),
                         ).iter().filter(|&item| item.0 != 0 as $type).copied().collect::<Vec<($type, u128)>>();
-                        let map = test_build::<$type, u128, MSPHasher<$type>, $Map<$type, u128, MSPHasher<$type>>, _>(
+                        let map = test_build::<$type, u128, $Hasher<$type>, $Map<$type, u128, $Hasher<$type>>, _>(
                             $cons,
                             data.into_boxed_slice(),
                         );
@@ -151,10 +149,9 @@ macro_rules! generate_map_int_special_tests {
 /// Generates tests for a map type for string keys.
 #[macro_export]
 macro_rules! generate_map_str_tests {
-    ($Map:tt, $factory: expr) => {
+    ($Map:tt, $Hasher:tt, $factory: expr) => {
         #[test]
         fn test_build_get_map_str() {
-            use $crate::hashing::hashers::msp::*;
             use $crate::testing::*;
 
             use rand::rngs::ThreadRng;
@@ -169,8 +166,8 @@ macro_rules! generate_map_str_tests {
             let map = test_build::<
                 String,
                 u128,
-                MSPHasher<String>,
-                $Map<String, u128, MSPHasher<String>>,
+                $Hasher<String>,
+                $Map<String, u128, $Hasher<String>>,
                 _,
             >($factory, data.to_vec().into_boxed_slice());
             test_get(&mut rng, map, &data);
@@ -181,10 +178,9 @@ macro_rules! generate_map_str_tests {
 /// Generates tests of special cases for a map type for string keys.
 #[macro_export]
 macro_rules! generate_map_str_special_tests {
-    ($Map:tt, $factory: expr) => {
+    ($Map:tt, $Hasher:tt, $factory: expr) => {
         #[test]
         fn test_get_key_zero_str() {
-            use $crate::hashing::hashers::msp::*;
             use $crate::testing::*;
 
             use rand::rngs::ThreadRng;
@@ -205,8 +201,8 @@ macro_rules! generate_map_str_special_tests {
                 let map = test_build::<
                     String,
                     u128,
-                    MSPHasher<String>,
-                    $Map<String, u128, MSPHasher<String>>,
+                    $Hasher<String>,
+                    $Map<String, u128, $Hasher<String>>,
                     _,
                 >($factory, data.into_boxed_slice());
                 assert_eq!(map.get(&"".to_string()), None);
@@ -218,28 +214,28 @@ macro_rules! generate_map_str_special_tests {
 /// Generates tests for a map type for string keys.
 #[macro_export]
 macro_rules! generate_map_tests {
-    ($Map:tt, $factory:expr) => {
+    ($Map:tt, $Hasher:tt, $factory:expr) => {
         use compose_idents::compose_idents;
         use $crate::generate_map_int_special_tests;
         use $crate::generate_map_int_tests;
         use $crate::generate_map_str_special_tests;
         use $crate::generate_map_str_tests;
 
-        generate_map_int_tests!($Map, $factory, u8);
-        generate_map_int_tests!($Map, $factory, i8);
-        generate_map_int_tests!($Map, $factory, u16);
-        generate_map_int_tests!($Map, $factory, i16);
-        generate_map_int_tests!($Map, $factory, u32);
-        generate_map_int_tests!($Map, $factory, i32);
-        generate_map_int_tests!($Map, $factory, u64);
-        generate_map_int_tests!($Map, $factory, i64);
-        generate_map_int_tests!($Map, $factory, u128);
-        generate_map_int_tests!($Map, $factory, i128);
+        generate_map_int_tests!($Map, $Hasher, $factory, u8);
+        generate_map_int_tests!($Map, $Hasher, $factory, i8);
+        generate_map_int_tests!($Map, $Hasher, $factory, u16);
+        generate_map_int_tests!($Map, $Hasher, $factory, i16);
+        generate_map_int_tests!($Map, $Hasher, $factory, u32);
+        generate_map_int_tests!($Map, $Hasher, $factory, i32);
+        generate_map_int_tests!($Map, $Hasher, $factory, u64);
+        generate_map_int_tests!($Map, $Hasher, $factory, i64);
+        generate_map_int_tests!($Map, $Hasher, $factory, u128);
+        generate_map_int_tests!($Map, $Hasher, $factory, i128);
         generate_map_int_special_tests!(
-            $Map, $factory, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128
+            $Map, $Hasher, $factory, u8, i8, u16, i16, u32, i32, u64, i64, u128, i128
         );
-        generate_map_str_tests!($Map, $factory);
-        generate_map_str_special_tests!($Map, $factory);
+        generate_map_str_tests!($Map, $Hasher, $factory);
+        generate_map_str_special_tests!($Map, $Hasher, $factory);
     };
 }
 

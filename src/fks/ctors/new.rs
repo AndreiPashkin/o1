@@ -209,6 +209,7 @@ mod tests {
     use crate::core::HashMap;
     use crate::fks::FKSMap;
     use crate::generate_map_tests;
+    use crate::hashing::hashers::msp::*;
     use std::fmt::Debug;
 
     fn factory<'a, K: Eq + Debug, V: Copy + Debug, H: Hasher<K>>(
@@ -217,5 +218,5 @@ mod tests {
         FKSMap::new(data, 0, 0.75).unwrap()
     }
 
-    generate_map_tests!(FKSMap, factory);
+    generate_map_tests!(FKSMap, MSPHasher, factory);
 }
