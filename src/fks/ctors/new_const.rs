@@ -40,7 +40,7 @@ macro_rules! new_fks_map {
             <$ConstHasherType as $crate::core::ConstHasher<$K>>::HasherType,
         > = {
             use core::marker::PhantomData;
-            use core::mem::{swap, transmute, transmute_copy, MaybeUninit};
+            use core::mem::{swap, transmute_copy, MaybeUninit};
             use $crate::core::ConstHasher;
             use $crate::fks::{Bucket, FKSMap};
             use $crate::utils::bit_array::{BitArray, Bits};
@@ -364,9 +364,9 @@ macro_rules! new_fks_map {
 
                     let (k, v) = unsafe { item.assume_init() };
                     // TODO: try to refactor to avoid redundant double-hasing.
-                    let bucket_idx = l1_hasher.hash(unsafe { transmute(&k) }) as usize;
+                    let bucket_idx = l1_hasher.hash(&k) as usize;
                     let bucket = unsafe { const_buckets[bucket_idx].assume_init_ref() };
-                    let slot_idx = bucket.hasher.hash(unsafe { transmute(&k) }) as usize;
+                    let slot_idx = bucket.hasher.hash(&k) as usize;
                     let data_idx = bucket.offset + slot_idx;
 
                     slots[data_idx] = MaybeUninit::new((k, v));
