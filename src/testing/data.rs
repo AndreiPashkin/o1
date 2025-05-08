@@ -3,6 +3,8 @@
 
 //! Test data for static hash map implementations
 
+#![allow(clippy::large_const_arrays)]
+
 // bool array (2 elements)
 pub const BOOL_DATA: [(bool, u64); 2] = [(false, 4887525525), (true, 6319811902)];
 

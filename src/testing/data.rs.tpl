@@ -3,6 +3,8 @@
 
 //! Test data for static hash map implementations
 
+#![allow(clippy::large_const_arrays)]
+
 {{ $data := datasource "data" }}
 
 {{ range $typeName, $typeInfo := $data }}
