@@ -17,7 +17,7 @@ pub fn generate_map_data<R: Rng, K: Eq + Hash + Generate<R>, V: Eq + Hash + Gene
     let keys = K::generate_many(rng, key_params, size).into_vec();
     let vals = V::generate_many(rng, val_params, size).into_vec();
     keys.into_iter()
-        .zip(vals.into_iter())
+        .zip(vals)
         .collect::<Vec<_>>()
         .into_boxed_slice()
 }
