@@ -61,11 +61,12 @@ pub fn equivalence<R, K>(
 }
 
 /// Generalizes hasher class equivalence testing.
+#[macro_export]
 macro_rules! hasher_equivalence {
     ($H1:ty, $H2:ty, $K:ty, $rng: expr, $gen_key:expr, $raw_num_buckets:expr, $num_trials:expr) => {{
         use rand::Rng;
         use std::fmt::Debug;
-        use $crate::testing::equivalence::equivalence;
+        use $crate::equivalence::equivalence;
 
         pub fn _hasher_equivalence<R>(
             rng: &mut R,
@@ -117,4 +118,4 @@ macro_rules! hasher_equivalence {
         _hasher_equivalence($rng, &$gen_key, $raw_num_buckets, $num_trials)
     }};
 }
-pub(crate) use hasher_equivalence;
+pub use hasher_equivalence;

@@ -1,8 +1,8 @@
 //! Implements [`HashMap`] for [`FKSMap`].
-use crate::core::{HashMap, Hasher};
 use crate::fks::FKSMap;
 use bitvec::prelude::*;
 use bitvec::view::BitView;
+use o1_core::{HashMap, Hasher};
 use std::fmt::Debug;
 
 impl<K: Eq + Debug, V, H: Hasher<K>> HashMap<K, V, H> for FKSMap<'_, K, V, H> {

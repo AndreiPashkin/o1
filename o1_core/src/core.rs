@@ -1,4 +1,4 @@
-//! Core trait and type declarations for the whole project.
+//! Core trait and type declarations for the other crates of the project.
 
 /// Hasher for the specific data-type.
 ///

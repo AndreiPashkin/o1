@@ -1,5 +1,5 @@
 //! Implements various empirical tests for testing hash functions.
-use crate::testing::{Generate, Jitter};
+use crate::{Generate, Jitter};
 use ndarray::prelude::*;
 use ndarray::{ScalarOperand, Zip};
 use num_traits::{Float, FromPrimitive, Num, NumAssignOps, ToPrimitive};

@@ -1,0 +1,10 @@
+[package]
+name = "o1_core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+thiserror = "2.0.11"
+
+[lints]
+workspace = true

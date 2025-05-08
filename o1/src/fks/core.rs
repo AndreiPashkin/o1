@@ -1,6 +1,6 @@
 //! Declares core types for [`FKSMap`].
-use crate::core::Hasher;
 use crate::utils::maybe_owned_slice::MaybeOwnedSliceMut;
+use o1_core::Hasher;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
@@ -15,7 +15,7 @@ use std::mem::MaybeUninit;
 /// # Examples
 ///
 /// ```rust
-/// use o1::core::HashMap;
+/// use o1_core::HashMap;
 /// use o1::hashing::hashers::MSPHasher;
 /// use o1::fks::FKSMap;
 ///

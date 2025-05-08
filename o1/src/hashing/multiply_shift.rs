@@ -328,7 +328,7 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
 mod tests {
     use super::*;
     use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-    use crate::testing::*;
+    use o1_testing::*;
     use rand::prelude::*;
     use rand_chacha::ChaCha20Rng;
 

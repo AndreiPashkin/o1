@@ -5,7 +5,6 @@
 //! Internally it treats big integers as vectors uses the [`multiply_shift_u8`] hash function.
 
 use super::core::MSPHasher;
-use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
@@ -13,6 +12,7 @@ use crate::hashing::multiply_shift::{
 };
 use crate::utils::xorshift::generate_random_array;
 use core::mem::size_of;
+use o1_core::{ConstHasher, Hasher};
 use rand::Rng;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -194,8 +194,8 @@ impl_const_hasher_for_bigint!(u128, i128, usize, isize);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::testing::equivalence::hasher_equivalence;
     use compose_idents::compose_idents;
+    use o1_testing::equivalence::hasher_equivalence;
     use rand::SeedableRng;
     use rand_chacha::ChaCha20Rng;
 

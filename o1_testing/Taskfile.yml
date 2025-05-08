@@ -1,0 +1,13 @@
+# https://taskfile.dev
+version: '3'
+
+tasks:
+  generate:
+    sources:
+      - src/testing/data.rs.tpl
+      - scripts/gen_map_test_data.py
+    generates:
+      - src/testing/data.rs
+    cmds:
+      - python3 scripts/gen_map_test_data.py |
+        gomplate -d data=stdin:///data.json?type=application/json -f src/data.rs.tpl -o src/data.rs

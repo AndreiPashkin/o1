@@ -1,4 +1,4 @@
-use crate::core::Hasher;
+use o1_core::Hasher;
 use std::fmt::{Debug, Formatter};
 
 /// Hasher based on multiply-shift and polynomial hashing.

@@ -335,7 +335,7 @@ const fn hash_chunk_const(chunk: &[u64], h1_seed: &[u64], h2_seed: &[u64]) -> u6
 mod tests {
     use super::*;
     use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-    use crate::testing::*;
+    use o1_testing::*;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 

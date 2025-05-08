@@ -1,6 +1,8 @@
 # https://taskfile.dev
 version: '3'
 
+includes:
+  o1_testing: ./o1_testing
 tasks:
   test:
     env:
@@ -11,11 +13,5 @@ tasks:
     cmds:
       - pre-commit run --all
   generate:
-    sources:
-      - src/testing/data.rs.tpl
-      - scripts/gen_map_test_data.py
-    generates:
-      - src/testing/data.rs
-    cmds:
-      - python3 scripts/gen_map_test_data.py |
-        gomplate -d data=stdin:///data.json?type=application/json -f src/testing/data.rs.tpl -o src/testing/data.rs
+    deps:
+      - task: o1_testing:generate

@@ -1,7 +1,7 @@
 //! Implements [`Drop`] for [`FKSMap`].
-use crate::core::Hasher;
 use crate::fks::FKSMap;
 use bitvec::prelude::*;
+use o1_core::Hasher;
 
 /// Deinitializes only the initialized slots and skips the non-initialized ones.
 impl<K: Eq, V, H: Hasher<K>> Drop for FKSMap<'_, K, V, H> {

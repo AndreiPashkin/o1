@@ -1,11 +1,11 @@
 //! Implements Hasher for u64 and i64 using [`pair_multiply_shift`] hash-function.
 
 use super::core::MSPHasher;
-use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::pair_multiply_shift;
 use crate::utils::xorshift::generate_random_array;
+use o1_core::{ConstHasher, Hasher};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -167,8 +167,8 @@ impl ConstHasher<i64> for ConstMSPHasher<i64, MSPHasher<i64>> {
 mod tests {
     use super::super::smallint::tests::impl_test_msp_hasher_equivalence;
     use super::*;
-    use crate::testing::equivalence::hasher_equivalence;
     use compose_idents::compose_idents;
+    use o1_testing::equivalence::hasher_equivalence;
     use rand::SeedableRng;
     use rand_chacha::ChaCha20Rng;
 

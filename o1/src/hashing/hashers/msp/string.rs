@@ -5,7 +5,6 @@
 //! Internally it uses the [`polynomial`] hash function.
 
 use super::core::MSPHasher;
-use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
@@ -13,6 +12,7 @@ use crate::hashing::multiply_shift::{
 };
 use crate::hashing::polynomial::{polynomial, polynomial_const, PolynomialSeed};
 use crate::utils::xorshift::generate_random_array;
+use o1_core::{ConstHasher, Hasher};
 use rand::{Rng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -247,8 +247,8 @@ impl<'a> ConstHasher<&'a str> for ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::testing::equivalence::hasher_equivalence;
-    use crate::testing::generate::{Generate, StringParams};
+    use o1_testing::equivalence::hasher_equivalence;
+    use o1_testing::generate::{Generate, StringParams};
     use rand::SeedableRng;
     use rand_chacha::ChaCha20Rng;
 

@@ -7,11 +7,11 @@
 //!   first, there should be specialized hash functions for these cases, so it's a TODO.
 
 use super::core::MSPHasher;
-use crate::core::{ConstHasher, Hasher};
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
 use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::multiply_shift;
 use crate::utils::xorshift::generate_random_array;
+use o1_core::{ConstHasher, Hasher};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -196,8 +196,8 @@ impl_const_hasher_for_int!(i32, u16, i16, u8, i8);
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::testing::equivalence::hasher_equivalence;
     use compose_idents::compose_idents;
+    use o1_testing::equivalence::hasher_equivalence;
     use rand::SeedableRng;
     use rand_chacha::ChaCha20Rng;
 

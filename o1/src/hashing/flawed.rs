@@ -18,7 +18,7 @@ pub fn lowest_bits(x: u64, num_bits: u32) -> u32 {
 mod tests {
     use super::*;
     use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-    use crate::testing::*;
+    use o1_testing::*;
     use rand::prelude::*;
     use rand_chacha::ChaCha20Rng;
 

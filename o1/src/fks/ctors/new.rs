@@ -1,10 +1,10 @@
 //! Implements constructors for [`FKSMap`].
-use crate::core::Hasher;
-use crate::error::O1Error;
-use crate::error::O1Error::UnableToFindHashFunction;
 use crate::fks::core::Bucket;
 use crate::fks::FKSMap;
 use bitvec::prelude::*;
+use o1_core::Hasher;
+use o1_core::O1Error;
+use o1_core::O1Error::UnableToFindHashFunction;
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::fmt::Debug;
@@ -206,10 +206,10 @@ impl<K: Eq + Debug, V, H: Hasher<K>> FKSMap<'_, K, V, H> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::HashMap;
     use crate::fks::FKSMap;
-    use crate::generate_map_tests;
     use crate::hashing::hashers::msp::*;
+    use o1_core::HashMap;
+    use o1_testing::generate_map_tests;
     use std::fmt::Debug;
 
     fn factory<'a, K: Eq + Debug, V: Copy + Debug, H: Hasher<K>>(

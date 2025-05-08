@@ -11,7 +11,7 @@
 /// # Examples
 ///
 /// ```rust
-/// use o1::core::HashMap;
+/// use o1_core::HashMap;
 /// use o1::hashing::hashers::MSPHasher;
 /// use o1::hashing::hashers::ConstMSPHasher;
 /// use o1::new_fks_map;
@@ -37,11 +37,11 @@ macro_rules! new_fks_map {
             'static,
             $K,
             $V,
-            <$ConstHasherType as $crate::core::ConstHasher<$K>>::HasherType,
+            <$ConstHasherType as o1_core::ConstHasher<$K>>::HasherType,
         > = {
             use core::marker::PhantomData;
             use core::mem::{swap, transmute_copy, MaybeUninit};
-            use $crate::core::ConstHasher;
+            use o1_core::ConstHasher;
             use $crate::fks::{Bucket, FKSMap};
             use $crate::utils::bit_array::{BitArray, Bits};
             use $crate::utils::const_hacks::div_ceil_f32;
@@ -426,12 +426,12 @@ pub use new_fks_map as new_const;
 #[cfg(test)]
 mod tests {
     #![allow(long_running_const_eval)]
-    use crate::core::HashMap;
-    use crate::generate_static_map_tests;
     use crate::hashing::hashers::ConstMSPHasher;
     use crate::hashing::hashers::MSPHasher;
     use crate::new_fks_map;
-    use crate::testing::data::*;
+    use o1_core::HashMap;
+    use o1_testing::data::*;
+    use o1_testing::generate_static_map_tests;
 
     new_fks_map!(U8_MAP, u8, u64, U8_DATA, ConstMSPHasher<u8, MSPHasher<u8>>, 42, 0.75);
     new_fks_map!(I8_MAP, i8, u64, I8_DATA, ConstMSPHasher<i8, MSPHasher<i8>>, 42, 0.75);
