@@ -228,7 +228,7 @@ macro_rules! new_fks_map {
                         return Some(ConstBucket {
                             offset: current_offset,
                             slots: slots.value(),
-                            num_slots: num_slots,
+                            num_slots,
                             hasher: l2_hasher,
                         });
                     }
