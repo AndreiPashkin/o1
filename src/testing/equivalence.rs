@@ -53,13 +53,9 @@ pub fn equivalence<R, K>(
         let hash2 = hash_fn2(&key);
 
         assert_eq!(
-            hash1,
-            hash2,
-            "Hash functions produce different results for seed {}, key {}: {}, {}",
-            seed,
-            format!("{:?}", key),
-            hash1,
-            hash2,
+            hash1, hash2,
+            "Hash functions produce different results for seed {}, key {:?}: {}, {}",
+            seed, key, hash1, hash2,
         );
     }
 }
