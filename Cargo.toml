@@ -15,4 +15,4 @@ compose-idents = "~0.0.7"
 [workspace.lints.clippy]
 doc_overindented_list_items = "allow"
 print_stderr = "deny"
-print_stdout = "allow"
+print_stdout = "deny"
