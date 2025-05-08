@@ -435,7 +435,7 @@ mod tests {
         let mut rng = ChaCha20Rng::from_os_rng();
 
         for vec_len in [1, 4, 8, 32, 256] {
-            let non_const_family = |seed: u64, num_buckets: usize| {
+            let non_const_family = move |seed: u64, num_buckets: usize| {
                 let mut rng = ChaCha20Rng::seed_from_u64(seed);
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 let mut seed = vec![0; vec_len * 2 + 1];
@@ -449,7 +449,7 @@ mod tests {
                 )
             };
 
-            let const_family = |seed: u64, num_buckets: usize| {
+            let const_family = move |seed: u64, num_buckets: usize| {
                 let mut rng = ChaCha20Rng::seed_from_u64(seed);
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 let mut seed = vec![0; vec_len * 2 + 1];
@@ -484,7 +484,7 @@ mod tests {
         let mut rng = ChaCha20Rng::from_os_rng();
 
         for vec_len in [0_usize, 1, 3, 4, 5, 7, 8, 9, 16, 32, 64, 128] {
-            let non_const_family = |seed: u64, num_buckets: usize| {
+            let non_const_family = move |seed: u64, num_buckets: usize| {
                 let mut rng = ChaCha20Rng::seed_from_u64(seed);
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
 
@@ -509,7 +509,7 @@ mod tests {
                 )
             };
 
-            let const_family = |seed: u64, num_buckets: usize| {
+            let const_family = move |seed: u64, num_buckets: usize| {
                 let mut rng = ChaCha20Rng::seed_from_u64(seed);
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
 
