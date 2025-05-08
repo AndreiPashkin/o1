@@ -143,7 +143,7 @@ where
     let dof = (contingency.nrows() - 1) * (contingency.ncols() - 1);
     chi2(
         contingency.as_slice().unwrap(),
-        &expected.as_slice().unwrap(),
+        expected.as_slice().unwrap(),
         Some(dof),
     )
 }
@@ -163,7 +163,7 @@ where
 
     chi2(
         observed.as_slice().unwrap(),
-        &expected.as_slice().unwrap(),
+        expected.as_slice().unwrap(),
         None,
     )
 }
@@ -293,7 +293,7 @@ pub fn strong_universality<R, K>(
         let independence_statistic = chi2_independence(&contingency);
         independence_statistics.push(independence_statistic);
         let uniformity_statistic = chi2_uniformity(
-            &contingency
+            contingency
                 .view()
                 .into_shape_with_order((contingency.len(),))
                 .unwrap(),
