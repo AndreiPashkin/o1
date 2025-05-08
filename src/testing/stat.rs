@@ -248,10 +248,12 @@ where
     }
 }
 
+type HashFunctionFamily<R, K> = dyn Fn(&mut R, usize) -> (Box<dyn Fn(&K) -> usize>, usize);
+
 /// Tests a hash function family for strong universality.
 pub fn strong_universality<R, K>(
     rng: &mut R,
-    family: &dyn Fn(&mut R, usize) -> (Box<dyn Fn(&K) -> usize>, usize),
+    family: &HashFunctionFamily<R, K>,
     raw_num_buckets: usize,
     num_samples_per_bucket: u32,
     num_trials: u32,
