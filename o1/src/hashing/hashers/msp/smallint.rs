@@ -65,6 +65,9 @@ const fn hash(state: &SmallIntState, value: u32) -> u32 {
 impl Hasher<u32> for MSPHasher<u32> {
     type State = SmallIntState;
 
+    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+        SmallIntState::from_seed(seed, num_buckets)
+    }
     fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = Self::State::from_seed(seed, num_buckets);
         Self { state }
@@ -92,6 +95,9 @@ macro_rules! impl_multiply_shift_small_int {
             impl Hasher<$k> for MSPHasher<$k> {
                 type State = SmallIntState;
 
+                fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+                    SmallIntState::from_seed(seed, num_buckets)
+                }
                 fn from_seed(seed: u64, num_buckets: u32) -> Self {
                     let state = Self::State::from_seed(seed, num_buckets);
                     Self { state }
@@ -120,6 +126,9 @@ impl ConstHasher<u32> for ConstMSPHasher<u32, MSPHasher<u32>> {
 }
 
 impl ConstMSPHasher<u32, MSPHasher<u32>> {
+    pub const fn make_state(seed: u64, num_buckets: u32) -> SmallIntState {
+        SmallIntState::from_seed_const(seed, num_buckets)
+    }
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = SmallIntState::from_seed_const(seed, num_buckets);
         Self { state }
@@ -151,6 +160,9 @@ macro_rules! impl_multiply_shift_small_int_const {
     ($($k:ty),*) => {
         $(
             impl ConstMSPHasher<$k, MSPHasher<$k>> {
+                pub const fn make_state(seed: u64, num_buckets: u32) -> SmallIntState {
+                    SmallIntState::from_seed_const(seed, num_buckets)
+                }
                 pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
                     let state = SmallIntState::from_seed_const(seed, num_buckets);
                     Self { state }

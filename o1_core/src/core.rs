@@ -20,6 +20,9 @@ where
     /// the implementation to decide what to store in it.
     type State: Clone + Default;
 
+    /// Create hasher's state from the given `seed` and `num_buckets` number of buckets.
+    fn make_state(seed: u64, num_buckets: u32) -> Self::State;
+
     /// Create a new hasher with a given `seed` and `num_buckets` number of buckets.
     fn from_seed(seed: u64, num_buckets: u32) -> Self;
 

@@ -121,6 +121,9 @@ macro_rules! impl_multiply_shift_big_int {
             impl Hasher<$T> for MSPHasher<$T> {
                 type State = BigIntState<$T>;
 
+                fn make_state(seed: u64, num_buckets: u32) -> BigIntState<$T> {
+                    BigIntState::from_seed(seed, num_buckets)
+                }
                 fn from_seed(seed: u64, num_buckets: u32) -> Self {
                     let state = Self::State::from_seed(seed, num_buckets);
                     Self { state }
@@ -144,6 +147,9 @@ macro_rules! impl_multiply_shift_big_int {
             }
 
             impl ConstMSPHasher<$T, MSPHasher<$T>> {
+                pub const fn make_state(seed: u64, num_buckets: u32) -> BigIntState<$T> {
+                    BigIntState::from_seed_const(seed, num_buckets)
+                }
                 pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
                     let state = BigIntState::<$T>::from_seed_const(seed, num_buckets);
                     Self { state }

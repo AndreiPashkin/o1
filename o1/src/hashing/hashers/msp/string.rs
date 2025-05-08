@@ -129,6 +129,9 @@ const fn hash_const(state: &StringState, value: &[u8]) -> u32 {
 impl Hasher<&[u8]> for MSPHasher<&[u8]> {
     type State = StringState;
 
+    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+        StringState::from_seed(seed, num_buckets)
+    }
     fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed(seed, num_buckets);
         Self { state }
@@ -150,6 +153,9 @@ impl Hasher<&[u8]> for MSPHasher<&[u8]> {
 impl Hasher<String> for MSPHasher<String> {
     type State = StringState;
 
+    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+        StringState::from_seed(seed, num_buckets)
+    }
     fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed(seed, num_buckets);
         Self { state }
@@ -171,6 +177,9 @@ impl Hasher<String> for MSPHasher<String> {
 impl<'a> Hasher<&'a str> for MSPHasher<&'a str> {
     type State = StringState;
 
+    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+        StringState::from_seed(seed, num_buckets)
+    }
     fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed(seed, num_buckets);
         Self { state }
@@ -190,6 +199,9 @@ impl<'a> Hasher<&'a str> for MSPHasher<&'a str> {
 }
 
 impl<'a> ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
+    pub const fn make_state(seed: u64, num_buckets: u32) -> StringState {
+        StringState::from_seed_const(seed, num_buckets)
+    }
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
         Self { state }
@@ -216,6 +228,9 @@ impl<'a> ConstHasher<&'a [u8]> for ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>>
 }
 
 impl<'a> ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
+    pub const fn make_state(seed: u64, num_buckets: u32) -> StringState {
+        StringState::from_seed_const(seed, num_buckets)
+    }
     pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
         Self { state }
