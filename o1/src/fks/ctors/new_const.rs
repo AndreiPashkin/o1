@@ -4,7 +4,7 @@
 ///
 /// - `name`: The name of the resulting static variable.
 /// - `data`: The data to be hashed.
-/// - `const_hasher`: Const-hasher type that should be used to hash the keys.
+/// - `hasher_type`: Hasher type that should be used to hash the keys.
 /// - `seed`: The seed for the random number generator.
 /// - `min_load_factor`: The minimum load factor.
 ///
@@ -13,7 +13,6 @@
 /// ```rust
 /// use o1_core::HashMap;
 /// use o1::hashing::hashers::MSPHasher;
-/// use o1::hashing::hashers::ConstMSPHasher;
 /// use o1::new_fks_map;
 ///
 /// // Create a static perfect hash map of book ratings
@@ -22,7 +21,7 @@
 ///     ("Moby Dick", 4),
 ///     ("Pride and Prejudice", 5),
 ///     ("The Catcher in the Rye", 3),
-/// ], ConstMSPHasher<&'static str, MSPHasher<&'static str>>, 42, 0.75);
+/// ], MSPHasher<&'static str>, 42, 0.75);
 ///
 /// // Now you can use the static map
 /// assert_eq!(BOOK_RATINGS.get(&"Moby Dick"), Some(&4));
@@ -32,16 +31,11 @@
 #[doc(hidden)]
 #[macro_export]
 macro_rules! new_fks_map {
-    ($name:ident, $K:ty, $V:ty, $data:expr, $ConstHasherType:ty, $seed:expr, $min_load_factor:expr$(,)?) => {
-        static $name: $crate::fks::FKSMap<
-            'static,
-            $K,
-            $V,
-            <$ConstHasherType as o1_core::ConstHasher<$K>>::HasherType,
-        > = {
+    ($name:ident, $K:ty, $V:ty, $data:expr, $HasherType:ty, $seed:expr, $min_load_factor:expr$(,)?) => {
+        static $name: $crate::fks::FKSMap<'static, $K, $V, $HasherType> = {
             use core::marker::PhantomData;
             use core::mem::{swap, transmute_copy, MaybeUninit};
-            use o1_core::ConstHasher;
+            use o1_core::Hasher;
             use $crate::fks::{Bucket, FKSMap};
             use $crate::utils::bit_array::{BitArray, Bits};
             use $crate::utils::const_hacks::div_ceil_f32;
@@ -66,7 +60,8 @@ macro_rules! new_fks_map {
                 /// A number of slots in the bucket.
                 pub num_slots: u8,
                 /// L2 hasher that contains parameters for the L2 hash function.
-                pub hasher: $ConstHasherType,
+                pub hasher: $HasherType,
+                pub hasher_state: <$HasherType as Hasher<$K>>::State,
             }
 
             /// Result of resolving L1 and L2 hash functions.
@@ -81,7 +76,7 @@ macro_rules! new_fks_map {
                 /// Total number of buckets in the hash table. Supposed to be less than or equal to
                 /// `MAX_NUM_BUCKETS`.
                 num_buckets: usize,
-                l1_hasher: $ConstHasherType,
+                l1_hasher: $HasherType,
                 /// Buckets of the hash-table.
                 buckets: [MaybeUninit<ConstBucket>; MAX_NUM_BUCKETS],
             }
@@ -89,10 +84,9 @@ macro_rules! new_fks_map {
             /// Contains all the data required to instantiate the static [`FKSMap`].
             struct BuildResult<const NUM_BUCKETS: usize, const NUM_SLOTS: usize> {
                 /// Non-const L1-hasher.
-                l1_hasher: <$ConstHasherType as ConstHasher<$K>>::HasherType,
+                l1_hasher: $HasherType,
                 /// Array of non-const buckets of optimal size.
-                buckets:
-                    [Bucket<$K, <$ConstHasherType as ConstHasher<$K>>::HasherType>; NUM_BUCKETS],
+                buckets: [Bucket<$K, $HasherType>; NUM_BUCKETS],
                 /// Data-array of optimal size.
                 slots: [MaybeUninit<($K, $V)>; NUM_SLOTS],
             }
@@ -120,14 +114,14 @@ macro_rules! new_fks_map {
                 num_trials: usize,
                 data: &[($K, $V); DATA_LEN],
             ) -> Option<(
-                $ConstHasherType,
+                $HasherType,
                 [BitArray<u64, KEY_BIT_ARRAY_LEN>; MAX_NUM_BUCKETS],
             )> {
                 let mut trial_idx = 0;
                 while trial_idx < num_trials {
                     let num_buckets_raw = div_ceil_f32(DATA_LEN as f32, load_factor) as u32;
-                    let l1_hasher = <$ConstHasherType>::from_seed(rng.next(), num_buckets_raw);
-                    let num_buckets = l1_hasher.num_buckets() as usize;
+                    let l1_hasher = <$HasherType>::from_seed_const(rng.next(), num_buckets_raw);
+                    let num_buckets = l1_hasher.num_buckets_const() as usize;
 
                     if num_buckets > MAX_NUM_BUCKETS {
                         break;
@@ -138,7 +132,7 @@ macro_rules! new_fks_map {
 
                     let mut i = 0;
                     while i < DATA_LEN {
-                        let hash = l1_hasher.hash(&data[i].0) as usize;
+                        let hash = l1_hasher.hash_const(&data[i].0) as usize;
                         bucket_to_keys[hash].set(i);
                         i += 1;
                     }
@@ -197,14 +191,16 @@ macro_rules! new_fks_map {
                         offset: 0,
                         slots: 0,
                         num_slots: 0,
-                        hasher: <$ConstHasherType>::from_seed(1, 1),
+                        hasher: <$HasherType>::from_seed_const(1, 1),
+                        hasher_state: <$HasherType>::make_state_const(1, 1),
                     });
                 }
 
                 let mut trial_idx = 0;
                 while trial_idx < num_trials {
-                    let l2_hasher = <$ConstHasherType>::from_seed(rng.next(), num_keys as u32);
-                    let num_slots = l2_hasher.num_buckets() as u8;
+                    let seed = rng.next();
+                    let l2_hasher = <$HasherType>::from_seed_const(seed, num_keys as u32);
+                    let num_slots = l2_hasher.num_buckets_const() as u8;
 
                     if num_slots > u8::MAX {
                         panic!("Number of slots exceeds u8::MAX");
@@ -215,7 +211,7 @@ macro_rules! new_fks_map {
                     let mut iter = keys.iter_ones_const();
 
                     while let Some(key_idx) = iter.next() {
-                        let hash = l2_hasher.hash(&data[key_idx].0) as usize;
+                        let hash = l2_hasher.hash_const(&data[key_idx].0) as usize;
 
                         if slots.get(hash).unwrap() {
                             is_collision = true;
@@ -230,6 +226,7 @@ macro_rules! new_fks_map {
                             slots: slots.value(),
                             num_slots,
                             hasher: l2_hasher,
+                            hasher_state: <$HasherType>::make_state_const(seed, num_keys as u32),
                         });
                     }
 
@@ -244,10 +241,7 @@ macro_rules! new_fks_map {
                 data: &[($K, $V); DATA_LEN],
                 seed: u64,
                 min_load_factor: f32,
-            ) -> Option<ResolveResult<MAX_NUM_BUCKETS>>
-            where
-                $ConstHasherType: ConstHasher<$K>,
-            {
+            ) -> Option<ResolveResult<MAX_NUM_BUCKETS>> {
                 let mut rng = XorShift::<u64>::new(seed);
 
                 let mut load_factor = 1.0;
@@ -283,12 +277,13 @@ macro_rules! new_fks_map {
                         offset: 0,
                         slots: 0,
                         num_slots: 0,
-                        hasher: <$ConstHasherType>::from_seed(1, 1),
+                        hasher: <$HasherType>::from_seed_const(1, 1),
+                        hasher_state: <$HasherType>::make_state_const(1, 1),
                     });
                     i += 1;
                 }
 
-                let num_buckets = l1_hasher.num_buckets() as usize;
+                let num_buckets = l1_hasher.num_buckets_const() as usize;
                 let mut current_offset = 0;
                 let mut bucket_idx = 0;
 
@@ -328,17 +323,13 @@ macro_rules! new_fks_map {
                 const DATA_LEN: usize,
             >(
                 data: [($K, $V); DATA_LEN],
-                l1_hasher: $ConstHasherType,
+                l1_hasher: $HasherType,
                 const_buckets: [MaybeUninit<ConstBucket>; MAX_NUM_BUCKETS],
-            ) -> BuildResult<NUM_BUCKETS, NUM_SLOTS>
-            where
-                $ConstHasherType: ConstHasher<$K>,
-            {
+            ) -> BuildResult<NUM_BUCKETS, NUM_SLOTS> {
                 let mut data: [MaybeUninit<($K, $V)>; DATA_LEN] = unsafe { transmute_copy(&data) };
 
-                let mut buckets: [MaybeUninit<
-                    Bucket<$K, <$ConstHasherType as ConstHasher<$K>>::HasherType>,
-                >; NUM_BUCKETS] = { unsafe { MaybeUninit::uninit().assume_init() } };
+                let mut buckets: [MaybeUninit<Bucket<$K, $HasherType>>; NUM_BUCKETS] =
+                    { unsafe { MaybeUninit::uninit().assume_init() } };
 
                 let mut slots: [MaybeUninit<($K, $V)>; NUM_SLOTS] =
                     { unsafe { MaybeUninit::uninit().assume_init() } };
@@ -350,7 +341,7 @@ macro_rules! new_fks_map {
                         offset: const_bucket.offset,
                         slots: const_bucket.slots,
                         num_slots: const_bucket.num_slots,
-                        hasher: const_bucket.hasher.to_hasher(),
+                        hasher: <$HasherType>::from_state_const(const_bucket.hasher_state),
                         key_type: PhantomData,
                     });
                     i += 1;
@@ -364,9 +355,9 @@ macro_rules! new_fks_map {
 
                     let (k, v) = unsafe { item.assume_init() };
                     // TODO: try to refactor to avoid redundant double-hasing.
-                    let bucket_idx = l1_hasher.hash(&k) as usize;
+                    let bucket_idx = l1_hasher.hash_const(&k) as usize;
                     let bucket = unsafe { const_buckets[bucket_idx].assume_init_ref() };
-                    let slot_idx = bucket.hasher.hash(&k) as usize;
+                    let slot_idx = bucket.hasher.hash_const(&k) as usize;
                     let data_idx = bucket.offset + slot_idx;
 
                     slots[data_idx] = MaybeUninit::new((k, v));
@@ -375,7 +366,7 @@ macro_rules! new_fks_map {
                 }
 
                 BuildResult {
-                    l1_hasher: l1_hasher.to_hasher(),
+                    l1_hasher,
                     buckets: unsafe { transmute_copy(&buckets) },
                     slots,
                 }
@@ -405,13 +396,13 @@ macro_rules! new_fks_map {
                 )
             };
 
-            static mut BUCKETS: [Bucket<$K, <$ConstHasherType as ConstHasher<$K>>::HasherType>;
-                BUILD_RESULT.buckets.len()] = { BUILD_RESULT.buckets };
+            static mut BUCKETS: [Bucket<$K, $HasherType>; BUILD_RESULT.buckets.len()] =
+                { BUILD_RESULT.buckets };
             static mut SLOTS: [MaybeUninit<($K, $V)>; BUILD_RESULT.slots.len()] =
                 { BUILD_RESULT.slots };
 
             #[allow(static_mut_refs)]
-            FKSMap::<'static, $K, $V, <$ConstHasherType as ConstHasher<$K>>::HasherType> {
+            FKSMap::<'static, $K, $V, $HasherType> {
                 l1_hasher: BUILD_RESULT.l1_hasher,
                 buckets: MaybeOwnedSliceMut::Borrowed(unsafe { &mut BUCKETS }),
                 slots: MaybeOwnedSliceMut::Borrowed(unsafe { &mut SLOTS }),
@@ -426,29 +417,28 @@ pub use new_fks_map as new_const;
 #[cfg(test)]
 mod tests {
     #![allow(long_running_const_eval)]
-    use crate::hashing::hashers::ConstMSPHasher;
     use crate::hashing::hashers::MSPHasher;
     use crate::new_fks_map;
     use o1_core::HashMap;
     use o1_testing::data::*;
     use o1_testing::generate_static_map_tests;
 
-    new_fks_map!(U8_MAP, u8, u64, U8_DATA, ConstMSPHasher<u8, MSPHasher<u8>>, 42, 0.75);
-    new_fks_map!(I8_MAP, i8, u64, I8_DATA, ConstMSPHasher<i8, MSPHasher<i8>>, 42, 0.75);
-    new_fks_map!(U16_MAP, u16, u64, U16_DATA, ConstMSPHasher<u16, MSPHasher<u16>>, 42, 0.75);
-    new_fks_map!(I16_MAP, i16, u64, I16_DATA, ConstMSPHasher<i16, MSPHasher<i16>>, 42, 0.75);
-    new_fks_map!(U32_MAP, u32, u64, U32_DATA, ConstMSPHasher<u32, MSPHasher<u32>>, 42, 0.75);
-    new_fks_map!(I32_MAP, i32, u64, I32_DATA, ConstMSPHasher<i32, MSPHasher<i32>>, 42, 0.75);
-    new_fks_map!(U64_MAP, u64, u64, U64_DATA, ConstMSPHasher<u64, MSPHasher<u64>>, 42, 0.75);
-    new_fks_map!(I64_MAP, i64, u64, I64_DATA, ConstMSPHasher<i64, MSPHasher<i64>>, 42, 0.75);
-    new_fks_map!(U128_MAP, u128, u64, U128_DATA, ConstMSPHasher<u128, MSPHasher<u128>>, 42, 0.75);
-    new_fks_map!(I128_MAP, i128, u64, I128_DATA, ConstMSPHasher<i128, MSPHasher<i128>>, 42, 0.75);
+    new_fks_map!(U8_MAP, u8, u64, U8_DATA, MSPHasher<u8>, 42, 0.75);
+    new_fks_map!(I8_MAP, i8, u64, I8_DATA, MSPHasher<i8>, 42, 0.75);
+    new_fks_map!(U16_MAP, u16, u64, U16_DATA, MSPHasher<u16>, 42, 0.75);
+    new_fks_map!(I16_MAP, i16, u64, I16_DATA, MSPHasher<i16>, 42, 0.75);
+    new_fks_map!(U32_MAP, u32, u64, U32_DATA, MSPHasher<u32>, 42, 0.75);
+    new_fks_map!(I32_MAP, i32, u64, I32_DATA, MSPHasher<i32>, 42, 0.75);
+    new_fks_map!(U64_MAP, u64, u64, U64_DATA, MSPHasher<u64>, 42, 0.75);
+    new_fks_map!(I64_MAP, i64, u64, I64_DATA, MSPHasher<i64>, 42, 0.75);
+    new_fks_map!(U128_MAP, u128, u64, U128_DATA, MSPHasher<u128>, 42, 0.75);
+    new_fks_map!(I128_MAP, i128, u64, I128_DATA, MSPHasher<i128>, 42, 0.75);
     new_fks_map!(
         STR_MAP,
         &'static str,
         u64,
         STR_DATA,
-        ConstMSPHasher<&'static str, MSPHasher<&'static str>>,
+        MSPHasher<&'static str>,
         42,
         0.75,
     );

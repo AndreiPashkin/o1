@@ -8,10 +8,9 @@
 
 use super::core::MSPHasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::multiply_shift;
 use crate::utils::xorshift::generate_random_array;
-use o1_core::{ConstHasher, Hasher};
+use o1_core::Hasher;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -86,6 +85,25 @@ impl Hasher<u32> for MSPHasher<u32> {
     }
 }
 
+impl MSPHasher<u32> {
+    pub const fn make_state_const(seed: u64, num_buckets: u32) -> SmallIntState {
+        SmallIntState::from_seed_const(seed, num_buckets)
+    }
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+        let state = SmallIntState::from_seed_const(seed, num_buckets);
+        Self { state }
+    }
+    pub const fn from_state_const(state: <Self as Hasher<u32>>::State) -> Self {
+        Self { state }
+    }
+    pub const fn num_buckets_const(&self) -> u32 {
+        num_buckets_for_bits(self.state.num_bits)
+    }
+    pub const fn hash_const(&self, value: &u32) -> u32 {
+        hash(&self.state, *value)
+    }
+}
+
 /// Generates [`Hasher`] and implementations for all other "small" integer types.
 ///
 /// The generated impls simply call the `u32` implementation and cast the input to `u32`.
@@ -115,95 +133,30 @@ macro_rules! impl_multiply_shift_small_int {
                     hash(&self.state, (*value) as u32)
                 }
             }
+
+            impl MSPHasher<$k> {
+                pub const fn make_state_const(seed: u64, num_buckets: u32) -> SmallIntState {
+                    SmallIntState::from_seed_const(seed, num_buckets)
+                }
+                pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+                    let state = SmallIntState::from_seed_const(seed, num_buckets);
+                    Self { state }
+                }
+                pub const fn from_state_const(state: <Self as Hasher<$k>>::State) -> Self {
+                    Self { state }
+                }
+                pub const fn num_buckets_const(&self) -> u32 {
+                    num_buckets_for_bits(self.state.num_bits)
+                }
+                pub const fn hash_const(&self, value: &$k) -> u32 {
+                    hash(&self.state, (*value) as u32)
+                }
+            }
         )*
     };
 }
 
 impl_multiply_shift_small_int!(i32, u16, i16, u8, i8);
-
-impl ConstHasher<u32> for ConstMSPHasher<u32, MSPHasher<u32>> {
-    type HasherType = MSPHasher<u32>;
-}
-
-impl ConstMSPHasher<u32, MSPHasher<u32>> {
-    pub const fn make_state(seed: u64, num_buckets: u32) -> SmallIntState {
-        SmallIntState::from_seed_const(seed, num_buckets)
-    }
-    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
-        let state = SmallIntState::from_seed_const(seed, num_buckets);
-        Self { state }
-    }
-    pub const fn from_state(state: SmallIntState) -> Self {
-        Self { state }
-    }
-    pub const fn state(&self) -> &SmallIntState {
-        &self.state
-    }
-    pub const fn into_hasher(self) -> MSPHasher<u32> {
-        MSPHasher { state: self.state }
-    }
-    pub const fn to_hasher(&self) -> MSPHasher<u32> {
-        MSPHasher { state: self.state }
-    }
-    pub const fn num_buckets(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    pub const fn hash(&self, value: &u32) -> u32 {
-        hash(&self.state, *value)
-    }
-}
-
-/// Generates const-hasher implementations for all other "small" integer types.
-///
-/// The generated impls simply call the `u32` implementation and cast the input to `u32`.
-macro_rules! impl_multiply_shift_small_int_const {
-    ($($k:ty),*) => {
-        $(
-            impl ConstMSPHasher<$k, MSPHasher<$k>> {
-                pub const fn make_state(seed: u64, num_buckets: u32) -> SmallIntState {
-                    SmallIntState::from_seed_const(seed, num_buckets)
-                }
-                pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
-                    let state = SmallIntState::from_seed_const(seed, num_buckets);
-                    Self { state }
-                }
-                pub const fn from_state(state: SmallIntState) -> Self {
-                    Self { state }
-                }
-                pub const fn state(&self) -> &SmallIntState {
-                    &self.state
-                }
-                pub const fn num_buckets(&self) -> u32 {
-                    num_buckets_for_bits(self.state.num_bits)
-                }
-                pub const fn hash(&self, value: &$k) -> u32 {
-                    hash(&self.state, *value as u32)
-                }
-                pub const fn into_hasher(self) -> MSPHasher<$k> {
-                    MSPHasher { state: self.state }
-                }
-                pub const fn to_hasher(&self) -> MSPHasher<$k> {
-                    MSPHasher { state: self.state }
-                }
-            }
-        )*
-    };
-}
-
-impl_multiply_shift_small_int_const!(i32, u16, i16, u8, i8);
-
-/// Implement ConstHasher trait for all integer types
-macro_rules! impl_const_hasher_for_int {
-    ($($k:ty),*) => {
-        $(
-            impl ConstHasher<$k> for ConstMSPHasher<$k, MSPHasher<$k>> {
-                type HasherType = MSPHasher<$k>;
-            }
-        )*
-    };
-}
-
-impl_const_hasher_for_int!(i32, u16, i16, u8, i8);
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -220,7 +173,6 @@ pub(crate) mod tests {
                 fn test_fn() {
                     hasher_equivalence!(
                         MSPHasher<$type>,
-                        ConstMSPHasher<$type, MSPHasher<$type>>,
                         $type,
                         &mut ChaCha20Rng::from_os_rng(),
                         |rng| {

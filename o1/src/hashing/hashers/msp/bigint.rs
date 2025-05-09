@@ -6,13 +6,12 @@
 
 use super::core::MSPHasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
     pair_multiply_shift_vector_u8, pair_multiply_shift_vector_u8_const,
 };
 use crate::utils::xorshift::generate_random_array;
 use core::mem::size_of;
-use o1_core::{ConstHasher, Hasher};
+use o1_core::Hasher;
 use rand::Rng;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -146,36 +145,27 @@ macro_rules! impl_multiply_shift_big_int {
                 }
             }
 
-            impl ConstMSPHasher<$T, MSPHasher<$T>> {
-                pub const fn make_state(seed: u64, num_buckets: u32) -> BigIntState<$T> {
+            impl MSPHasher<$T> {
+                pub const fn make_state_const(seed: u64, num_buckets: u32) -> BigIntState<$T> {
                     BigIntState::from_seed_const(seed, num_buckets)
                 }
-                pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
+                pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
                     let state = BigIntState::<$T>::from_seed_const(seed, num_buckets);
                     Self { state }
                 }
-                pub const fn from_state(state: BigIntState<$T>) -> Self {
+                pub const fn from_state_const(state: <Self as Hasher<$T>>::State) -> Self {
                     Self { state }
                 }
-                pub const fn state(&self) -> &BigIntState<$T> {
-                    &self.state
-                }
-                pub const fn num_buckets(&self) -> u32 {
+                pub const fn num_buckets_const(&self) -> u32 {
                     num_buckets_for_bits(self.state.num_bits)
                 }
-                pub const fn hash(&self, value: &$T) -> u32 {
+                pub const fn hash_const(&self, value: &$T) -> u32 {
                     let bytes = value.to_le_bytes();
                     pair_multiply_shift_vector_u8_const(
                         &bytes,
                         self.state.num_bits,
-                        &self.state.seed(),
+                        self.state.seed(),
                     )
-                }
-                pub const fn into_hasher(self) -> MSPHasher<$T> {
-                    MSPHasher { state: self.state }
-                }
-                pub const fn to_hasher(&self) -> MSPHasher<$T> {
-                    MSPHasher { state: self.state }
                 }
             }
         )*
@@ -183,19 +173,6 @@ macro_rules! impl_multiply_shift_big_int {
 }
 
 impl_multiply_shift_big_int!(u128, i128, usize, isize);
-
-/// Implement ConstHasher trait for big integer types
-macro_rules! impl_const_hasher_for_bigint {
-    ($($T:ty),*) => {
-        $(
-            impl ConstHasher<$T> for ConstMSPHasher<$T, MSPHasher<$T>> {
-                type HasherType = MSPHasher<$T>;
-            }
-        )*
-    };
-}
-
-impl_const_hasher_for_bigint!(u128, i128, usize, isize);
 
 #[cfg(test)]
 mod tests {
@@ -212,7 +189,6 @@ mod tests {
                 fn test_fn() {
                     hasher_equivalence!(
                         MSPHasher<$type>,
-                        ConstMSPHasher<$type, MSPHasher<$type>>,
                         $type,
                         &mut ChaCha20Rng::from_os_rng(),
                         |rng| $gen_expr(rng),

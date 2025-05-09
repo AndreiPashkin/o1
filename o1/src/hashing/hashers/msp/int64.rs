@@ -2,10 +2,9 @@
 
 use super::core::MSPHasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::pair_multiply_shift;
 use crate::utils::xorshift::generate_random_array;
-use o1_core::{ConstHasher, Hasher};
+use o1_core::Hasher;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -87,6 +86,25 @@ impl Hasher<u64> for MSPHasher<u64> {
     }
 }
 
+impl MSPHasher<u64> {
+    pub const fn make_state_const(seed: u64, num_buckets: u32) -> U64State {
+        U64State::from_seed_const(seed, num_buckets)
+    }
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+        let state = U64State::from_seed_const(seed, num_buckets);
+        Self { state }
+    }
+    pub const fn from_state_const(state: <Self as Hasher<u64>>::State) -> Self {
+        Self { state }
+    }
+    pub const fn num_buckets_const(&self) -> u32 {
+        num_buckets_for_bits(self.state.num_bits)
+    }
+    pub const fn hash_const(&self, value: &u64) -> u32 {
+        hash_const(&self.state, *value)
+    }
+}
+
 impl Hasher<i64> for MSPHasher<i64> {
     type State = U64State;
 
@@ -111,68 +129,23 @@ impl Hasher<i64> for MSPHasher<i64> {
     }
 }
 
-impl ConstMSPHasher<u64, MSPHasher<u64>> {
-    pub const fn make_state(seed: u64, num_buckets: u32) -> U64State {
+impl MSPHasher<i64> {
+    pub const fn make_state_const(seed: u64, num_buckets: u32) -> U64State {
         U64State::from_seed_const(seed, num_buckets)
     }
-    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
         let state = U64State::from_seed_const(seed, num_buckets);
         Self { state }
     }
-    pub const fn from_state(state: U64State) -> Self {
+    pub const fn from_state_const(state: <Self as Hasher<i64>>::State) -> Self {
         Self { state }
     }
-    pub const fn state(&self) -> &U64State {
-        &self.state
-    }
-    pub const fn num_buckets(&self) -> u32 {
+    pub const fn num_buckets_const(&self) -> u32 {
         num_buckets_for_bits(self.state.num_bits)
     }
-    pub const fn hash(&self, value: &u64) -> u32 {
-        hash_const(&self.state, *value)
-    }
-    pub const fn into_hasher(self) -> MSPHasher<u64> {
-        MSPHasher { state: self.state }
-    }
-    pub const fn to_hasher(&self) -> MSPHasher<u64> {
-        MSPHasher { state: self.state }
-    }
-}
-
-impl ConstMSPHasher<i64, MSPHasher<i64>> {
-    pub const fn make_state(seed: u64, num_buckets: u32) -> U64State {
-        U64State::from_seed_const(seed, num_buckets)
-    }
-    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
-        let state = U64State::from_seed_const(seed, num_buckets);
-        Self { state }
-    }
-    pub const fn from_state(state: U64State) -> Self {
-        Self { state }
-    }
-    pub const fn state(&self) -> &U64State {
-        &self.state
-    }
-    pub const fn num_buckets(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    pub const fn hash(&self, value: &i64) -> u32 {
+    pub const fn hash_const(&self, value: &i64) -> u32 {
         hash_const(&self.state, *value as u64)
     }
-    pub const fn into_hasher(self) -> MSPHasher<i64> {
-        MSPHasher { state: self.state }
-    }
-    pub const fn to_hasher(&self) -> MSPHasher<i64> {
-        MSPHasher { state: self.state }
-    }
-}
-
-impl ConstHasher<u64> for ConstMSPHasher<u64, MSPHasher<u64>> {
-    type HasherType = MSPHasher<u64>;
-}
-
-impl ConstHasher<i64> for ConstMSPHasher<i64, MSPHasher<i64>> {
-    type HasherType = MSPHasher<i64>;
 }
 
 #[cfg(test)]

@@ -63,7 +63,7 @@ pub fn equivalence<R, K>(
 /// Generalizes hasher class equivalence testing.
 #[macro_export]
 macro_rules! hasher_equivalence {
-    ($H1:ty, $H2:ty, $K:ty, $rng: expr, $gen_key:expr, $raw_num_buckets:expr, $num_trials:expr) => {{
+    ($H:ty, $K:ty, $rng: expr, $gen_key:expr, $raw_num_buckets:expr, $num_trials:expr) => {{
         use rand::Rng;
         use std::fmt::Debug;
         use $crate::equivalence::equivalence;
@@ -79,12 +79,12 @@ macro_rules! hasher_equivalence {
         {
             let family1 = |seed: u64, num_buckets: usize| {
                 let seed = seed | 1;
-                let hasher = <$H1>::from_seed(seed, num_buckets as u32);
-                let state = *hasher.state();
+                let state = <$H>::make_state(seed, num_buckets as u32);
+                let hasher = <$H>::from_state(state.clone());
 
                 (
                     Box::new(move |value: &$K| {
-                        let h = <$H1>::from_state(state);
+                        let h = <$H>::from_state(state);
                         h.hash(value) as usize
                     }) as Box<dyn Fn(&$K) -> usize>,
                     hasher.num_buckets() as usize,
@@ -92,16 +92,15 @@ macro_rules! hasher_equivalence {
             };
             let family2 = |seed: u64, num_buckets: usize| {
                 let seed = seed | 1;
-                let hasher1 = <$H1>::from_seed(seed, num_buckets as u32);
-                let state = *hasher1.state();
-                let hasher2 = <$H2>::from_state(state);
+                let state = <$H>::make_state(seed, num_buckets as u32);
+                let hasher = <$H>::from_state(state.clone());
 
                 (
                     Box::new(move |value: &$K| {
-                        let h = <$H2>::from_state(state);
-                        h.hash(value) as usize
+                        let h = <$H>::from_state(state);
+                        h.hash_const(value) as usize
                     }) as Box<dyn Fn(&$K) -> usize>,
-                    hasher2.num_buckets() as usize,
+                    hasher.num_buckets() as usize,
                 )
             };
 

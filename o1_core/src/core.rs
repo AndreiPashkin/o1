@@ -9,6 +9,13 @@
 /// (in case if they need to store any state) and have less performance overhead by tailoring the
 /// implementation to each target type and also avoiding the additional layer of indirection that
 /// the pair [`core::hash::Hash`] and [`core::hash::Hasher`] have.
+///
+/// Implementations should also provide equivalent const versions of its methods (with `_const`
+/// suffix) to support compile-time execution. The exceptions in terms of equivalence are
+/// `make_state()` `from_seed()` methods - they are allowed to be not equivalent with the
+/// const-versions due to difficulty of implementing equivalent RNGs.
+/// In case if implementing const-methods is impossible, implementers should just make stub
+/// implementations with `unimplemented!()` as the only instruction within them.
 pub trait Hasher<T>
 where
     Self: Default,
@@ -41,13 +48,6 @@ where
     ///
     /// - Currently only `u32` is supported due to lack of need for larger hash values.
     fn hash(&self, value: &T) -> u32;
-}
-
-pub trait ConstHasher<T>
-where
-    T: Eq,
-{
-    type HasherType: Hasher<T>;
 }
 
 // TODO: I'm not sure about the design choice of including `Hasher` as a generic parameter.

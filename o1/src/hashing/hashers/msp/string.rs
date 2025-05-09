@@ -6,13 +6,12 @@
 
 use super::core::MSPHasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-use crate::hashing::hashers::ConstMSPHasher;
 use crate::hashing::multiply_shift::{
     pair_multiply_shift_vector_u8, pair_multiply_shift_vector_u8_const,
 };
 use crate::hashing::polynomial::{polynomial, polynomial_const, PolynomialSeed};
 use crate::utils::xorshift::generate_random_array;
-use o1_core::{ConstHasher, Hasher};
+use o1_core::Hasher;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -150,6 +149,25 @@ impl Hasher<&[u8]> for MSPHasher<&[u8]> {
     }
 }
 
+impl MSPHasher<&[u8]> {
+    pub const fn make_state_const(seed: u64, num_buckets: u32) -> StringState {
+        StringState::from_seed_const(seed, num_buckets)
+    }
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+        let state = StringState::from_seed_const(seed, num_buckets);
+        Self { state }
+    }
+    pub const fn from_state_const(state: <Self as Hasher<&[u8]>>::State) -> Self {
+        Self { state }
+    }
+    pub const fn num_buckets_const(&self) -> u32 {
+        num_buckets_for_bits(self.state.num_bits)
+    }
+    pub const fn hash_const(&self, value: &&[u8]) -> u32 {
+        hash_const(&self.state, value)
+    }
+}
+
 impl Hasher<String> for MSPHasher<String> {
     type State = StringState;
 
@@ -198,65 +216,23 @@ impl<'a> Hasher<&'a str> for MSPHasher<&'a str> {
     }
 }
 
-impl<'a> ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
-    pub const fn make_state(seed: u64, num_buckets: u32) -> StringState {
+impl<'a> MSPHasher<&'a str> {
+    pub const fn make_state_const(seed: u64, num_buckets: u32) -> StringState {
         StringState::from_seed_const(seed, num_buckets)
     }
-    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
+    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
         let state = StringState::from_seed_const(seed, num_buckets);
         Self { state }
     }
-    pub const fn from_state(state: StringState) -> Self {
+    pub const fn from_state_const(state: <Self as Hasher<&'a str>>::State) -> Self {
         Self { state }
     }
-    pub const fn state(&self) -> &StringState {
-        &self.state
-    }
-    pub const fn num_buckets(&self) -> u32 {
+    pub const fn num_buckets_const(&self) -> u32 {
         num_buckets_for_bits(self.state.num_bits)
     }
-    pub const fn hash(&self, value: &&[u8]) -> u32 {
-        hash_const(&self.state, value)
-    }
-    pub const fn into_hasher(self) -> MSPHasher<&'a [u8]> {
-        MSPHasher { state: self.state }
-    }
-}
-
-impl<'a> ConstHasher<&'a [u8]> for ConstMSPHasher<&'a [u8], MSPHasher<&'a [u8]>> {
-    type HasherType = MSPHasher<&'a [u8]>;
-}
-
-impl<'a> ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
-    pub const fn make_state(seed: u64, num_buckets: u32) -> StringState {
-        StringState::from_seed_const(seed, num_buckets)
-    }
-    pub const fn from_seed(seed: u64, num_buckets: u32) -> Self {
-        let state = StringState::from_seed_const(seed, num_buckets);
-        Self { state }
-    }
-    pub const fn from_state(state: StringState) -> Self {
-        Self { state }
-    }
-    pub const fn state(&self) -> &StringState {
-        &self.state
-    }
-    pub const fn num_buckets(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    pub const fn hash(&self, value: &&str) -> u32 {
+    pub const fn hash_const(&self, value: &&str) -> u32 {
         hash_const(&self.state, value.as_bytes())
     }
-    pub const fn into_hasher(self) -> MSPHasher<&'a str> {
-        MSPHasher { state: self.state }
-    }
-    pub const fn to_hasher(&self) -> MSPHasher<&'a str> {
-        MSPHasher { state: self.state }
-    }
-}
-
-impl<'a> ConstHasher<&'a str> for ConstMSPHasher<&'a str, MSPHasher<&'a str>> {
-    type HasherType = MSPHasher<&'a str>;
 }
 
 #[cfg(test)]
@@ -271,12 +247,9 @@ mod tests {
     fn test_msp_hasher_equivalence_str() {
         hasher_equivalence!(
             MSPHasher<&str>,
-            ConstMSPHasher<&str, MSPHasher<&str>>,
             &'static str,
             &mut ChaCha20Rng::from_os_rng(),
-            |rng| {
-                String::generate(rng, &StringParams::new(0, 512)).leak()
-            },
+            |rng| { String::generate(rng, &StringParams::new(0, 512)).leak() },
             1 << 16,
             99
         );
@@ -286,7 +259,6 @@ mod tests {
     fn test_msp_hasher_equivalence_bytes() {
         hasher_equivalence!(
             MSPHasher<&'static [u8]>,
-            ConstMSPHasher<&'static [u8], MSPHasher<&'static [u8]>>,
             &'static [u8],
             &mut ChaCha20Rng::from_os_rng(),
             |rng| String::generate(rng, &StringParams::new(0, 512))
