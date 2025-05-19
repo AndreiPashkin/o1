@@ -150,13 +150,11 @@ impl MSPHasher<i64> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::smallint::tests::impl_test_msp_hasher_equivalence;
     use super::*;
-    use compose_idents::compose_idents;
-    use o1_testing::equivalence::hasher_equivalence;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha20Rng;
+    use o1_testing::generate_hasher_tests;
 
-    impl_test_msp_hasher_equivalence!(u64);
-    impl_test_msp_hasher_equivalence!(i64);
+    generate_hasher_tests!(MSPHasher<u64>, u64, |rng: &mut ChaCha20Rng| rng
+        .random::<u64>());
+    generate_hasher_tests!(MSPHasher<i64>, i64, |rng: &mut ChaCha20Rng| rng
+        .random::<i64>());
 }

@@ -238,34 +238,23 @@ impl<'a> MSPHasher<&'a str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use o1_testing::equivalence::hasher_equivalence;
-    use o1_testing::generate::{Generate, StringParams};
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha20Rng;
+    use o1_testing::generate::Generate;
+    use o1_testing::generate_hasher_tests;
 
-    #[test]
-    fn test_msp_hasher_equivalence_str() {
-        hasher_equivalence!(
-            MSPHasher<&str>,
-            &'static str,
-            &mut ChaCha20Rng::from_os_rng(),
-            |rng| { String::generate(rng, &StringParams::new(0, 512)).leak() },
-            1 << 16,
-            99
-        );
-    }
+    generate_hasher_tests!(MSPHasher<&str>, &'static str, |rng| {
+        String::generate(
+            rng,
+            &<String as Generate<ChaCha20Rng>>::GenerateParams::default(),
+        )
+        .leak()
+    });
 
-    #[test]
-    fn test_msp_hasher_equivalence_bytes() {
-        hasher_equivalence!(
-            MSPHasher<&'static [u8]>,
-            &'static [u8],
-            &mut ChaCha20Rng::from_os_rng(),
-            |rng| String::generate(rng, &StringParams::new(0, 512))
-                .leak()
-                .as_bytes(),
-            1 << 16,
-            99
-        );
-    }
+    generate_hasher_tests!(MSPHasher<&[u8]>, &'static [u8], |rng| {
+        String::generate(
+            rng,
+            &<String as Generate<ChaCha20Rng>>::GenerateParams::default(),
+        )
+        .into_bytes()
+        .leak()
+    });
 }

@@ -177,33 +177,20 @@ impl_multiply_shift_big_int!(u128, i128, usize, isize);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compose_idents::compose_idents;
-    use o1_testing::equivalence::hasher_equivalence;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha20Rng;
+    use o1_testing::generate_hasher_tests;
 
-    macro_rules! impl_test_msp_hasher_equivalence_bigint {
-        ($type:ty, $gen_expr:expr) => {
-            compose_idents!(test_fn = [test_msp_hasher_equivalence_, $type], {
-                #[test]
-                fn test_fn() {
-                    hasher_equivalence!(
-                        MSPHasher<$type>,
-                        $type,
-                        &mut ChaCha20Rng::from_os_rng(),
-                        |rng| $gen_expr(rng),
-                        1 << 16,
-                        999
-                    );
-                }
-            });
-        };
-    }
-
-    impl_test_msp_hasher_equivalence_bigint!(u128, |rng: &mut ChaCha20Rng| rng.random::<u128>());
-    impl_test_msp_hasher_equivalence_bigint!(i128, |rng: &mut ChaCha20Rng| rng.random::<i128>());
-    impl_test_msp_hasher_equivalence_bigint!(usize, |rng: &mut ChaCha20Rng| rng.random::<u64>()
-        as usize);
-    impl_test_msp_hasher_equivalence_bigint!(isize, |rng: &mut ChaCha20Rng| rng.random::<i64>()
-        as isize);
+    generate_hasher_tests!(MSPHasher<u128>, u128, |rng: &mut ChaCha20Rng| rng
+        .random::<u128>());
+    generate_hasher_tests!(MSPHasher<i128>, i128, |rng: &mut ChaCha20Rng| rng
+        .random::<i128>());
+    generate_hasher_tests!(
+        MSPHasher<usize>,
+        usize,
+        |rng: &mut ChaCha20Rng| rng.random::<u64>() as usize
+    );
+    generate_hasher_tests!(
+        MSPHasher<isize>,
+        isize,
+        |rng: &mut ChaCha20Rng| rng.random::<i64>() as isize
+    );
 }
