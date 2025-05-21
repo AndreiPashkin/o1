@@ -62,91 +62,58 @@ const fn hash_const(state: &U64State, value: u64) -> u32 {
     pair_multiply_shift(value, state.num_bits, &state.seed)
 }
 
-impl Hasher<u64> for MSPHasher<u64> {
-    type State = U64State;
+macro_rules! impl_multiply_shift_int_64 {
+    ($($int_type:ty),*) => {
+        $(
+            impl Hasher<$int_type> for MSPHasher<$int_type> {
+                type State = U64State;
 
-    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
-        U64State::from_seed(seed, num_buckets)
-    }
-    fn from_seed(seed: u64, num_buckets: u32) -> Self {
-        let state = Self::State::from_seed(seed, num_buckets);
-        Self { state }
-    }
-    fn from_state(state: Self::State) -> Self {
-        Self { state }
-    }
-    fn state(&self) -> &Self::State {
-        &self.state
-    }
-    fn num_buckets(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    fn hash(&self, value: &u64) -> u32 {
-        hash(&self.state, *value)
-    }
+                fn make_state(seed: u64, num_buckets: u32) -> Self::State {
+                    U64State::from_seed(seed, num_buckets)
+                }
+                fn from_seed(seed: u64, num_buckets: u32) -> Self {
+                    let state = Self::State::from_seed(seed, num_buckets);
+                    Self { state }
+                }
+                fn from_state(state: Self::State) -> Self {
+                    Self { state }
+                }
+                fn state(&self) -> &Self::State {
+                    &self.state
+                }
+                fn num_buckets(&self) -> u32 {
+                    num_buckets_for_bits(self.state.num_bits)
+                }
+                fn hash(&self, value: &$int_type) -> u32 {
+                    hash(&self.state, *value as u64)
+                }
+            }
+
+            impl MSPHasher<$int_type> {
+                pub const fn make_state_const(seed: u64, num_buckets: u32) -> U64State {
+                    U64State::from_seed_const(seed, num_buckets)
+                }
+                pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
+                    let state = U64State::from_seed_const(seed, num_buckets);
+                    Self { state }
+                }
+                pub const fn from_state_const(state: <Self as Hasher<$int_type>>::State) -> Self {
+                    Self { state }
+                }
+                pub const fn num_buckets_const(&self) -> u32 {
+                    num_buckets_for_bits(self.state.num_bits)
+                }
+                pub const fn hash_const(&self, value: &$int_type) -> u32 {
+                    hash_const(&self.state, *value as u64)
+                }
+            }
+        )*
+    };
 }
 
-impl MSPHasher<u64> {
-    pub const fn make_state_const(seed: u64, num_buckets: u32) -> U64State {
-        U64State::from_seed_const(seed, num_buckets)
-    }
-    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
-        let state = U64State::from_seed_const(seed, num_buckets);
-        Self { state }
-    }
-    pub const fn from_state_const(state: <Self as Hasher<u64>>::State) -> Self {
-        Self { state }
-    }
-    pub const fn num_buckets_const(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    pub const fn hash_const(&self, value: &u64) -> u32 {
-        hash_const(&self.state, *value)
-    }
-}
-
-impl Hasher<i64> for MSPHasher<i64> {
-    type State = U64State;
-
-    fn make_state(seed: u64, num_buckets: u32) -> Self::State {
-        U64State::from_seed(seed, num_buckets)
-    }
-    fn from_seed(seed: u64, num_buckets: u32) -> Self {
-        let state = Self::State::from_seed(seed, num_buckets);
-        Self { state }
-    }
-    fn from_state(state: Self::State) -> Self {
-        Self { state }
-    }
-    fn state(&self) -> &Self::State {
-        &self.state
-    }
-    fn num_buckets(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    fn hash(&self, value: &i64) -> u32 {
-        hash(&self.state, *value as u64)
-    }
-}
-
-impl MSPHasher<i64> {
-    pub const fn make_state_const(seed: u64, num_buckets: u32) -> U64State {
-        U64State::from_seed_const(seed, num_buckets)
-    }
-    pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
-        let state = U64State::from_seed_const(seed, num_buckets);
-        Self { state }
-    }
-    pub const fn from_state_const(state: <Self as Hasher<i64>>::State) -> Self {
-        Self { state }
-    }
-    pub const fn num_buckets_const(&self) -> u32 {
-        num_buckets_for_bits(self.state.num_bits)
-    }
-    pub const fn hash_const(&self, value: &i64) -> u32 {
-        hash_const(&self.state, *value as u64)
-    }
-}
+impl_multiply_shift_int_64!(u64, i64);
+#[cfg(target_pointer_width = "64")]
+impl_multiply_shift_int_64!(usize, isize);
 
 #[cfg(test)]
 mod tests {
@@ -157,4 +124,16 @@ mod tests {
         .random::<u64>());
     generate_hasher_tests!(MSPHasher<i64>, i64, |rng: &mut ChaCha20Rng| rng
         .random::<i64>());
+    #[cfg(target_pointer_width = "64")]
+    generate_hasher_tests!(
+        MSPHasher<usize>,
+        usize,
+        |rng: &mut ChaCha20Rng| rng.random::<u64>() as usize
+    );
+    #[cfg(target_pointer_width = "64")]
+    generate_hasher_tests!(
+        MSPHasher<isize>,
+        isize,
+        |rng: &mut ChaCha20Rng| rng.random::<i64>() as isize
+    );
 }

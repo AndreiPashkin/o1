@@ -157,6 +157,8 @@ macro_rules! impl_multiply_shift_small_int {
 }
 
 impl_multiply_shift_small_int!(i32, u16, i16, u8, i8);
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
+impl_multiply_shift_small_int!(usize, isize);
 
 #[cfg(test)]
 mod tests {
@@ -175,4 +177,28 @@ mod tests {
         .random::<u8>());
     generate_hasher_tests!(MSPHasher<i8>, i8, |rng: &mut ChaCha20Rng| rng
         .random::<i8>());
+    #[cfg(target_pointer_width = "32")]
+    generate_hasher_tests!(
+        MSPHasher<usize>,
+        usize,
+        |rng: &mut ChaCha20Rng| rng.random::<u32>() as usize
+    );
+    #[cfg(target_pointer_width = "32")]
+    generate_hasher_tests!(
+        MSPHasher<isize>,
+        isize,
+        |rng: &mut ChaCha20Rng| rng.random::<i32>() as isize
+    );
+    #[cfg(target_pointer_width = "16")]
+    generate_hasher_tests!(
+        MSPHasher<usize>,
+        usize,
+        |rng: &mut ChaCha20Rng| rng.random::<u16>() as usize
+    );
+    #[cfg(target_pointer_width = "16")]
+    generate_hasher_tests!(
+        MSPHasher<isize>,
+        isize,
+        |rng: &mut ChaCha20Rng| rng.random::<i16>() as isize
+    );
 }

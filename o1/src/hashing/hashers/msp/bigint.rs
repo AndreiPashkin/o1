@@ -172,7 +172,7 @@ macro_rules! impl_multiply_shift_big_int {
     };
 }
 
-impl_multiply_shift_big_int!(u128, i128, usize, isize);
+impl_multiply_shift_big_int!(u128, i128);
 
 #[cfg(test)]
 mod tests {
@@ -183,14 +183,4 @@ mod tests {
         .random::<u128>());
     generate_hasher_tests!(MSPHasher<i128>, i128, |rng: &mut ChaCha20Rng| rng
         .random::<i128>());
-    generate_hasher_tests!(
-        MSPHasher<usize>,
-        usize,
-        |rng: &mut ChaCha20Rng| rng.random::<u64>() as usize
-    );
-    generate_hasher_tests!(
-        MSPHasher<isize>,
-        isize,
-        |rng: &mut ChaCha20Rng| rng.random::<i64>() as isize
-    );
 }
