@@ -6,27 +6,14 @@
 
 use super::core::MSPHasher;
 use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-use crate::hashing::multiply_shift::{
-    pair_multiply_shift_vector_u8, pair_multiply_shift_vector_u8_const,
-};
+use crate::hashing::multiply_shift::pair_multiply_shift_u128;
 use crate::utils::xorshift::generate_random_array;
-use core::mem::size_of;
 use o1_core::Hasher;
 use rand::Rng;
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-const MAX_SEED_SIZE: usize = {
-    let u128_size = size_of::<u128>();
-    let usize_size = size_of::<usize>();
-
-    let max_size = if u128_size > usize_size {
-        u128_size
-    } else {
-        usize_size
-    };
-    max_size.div_ceil(4) + 1
-};
+const SEED_LEN: usize = 5;
 
 #[derive(Debug, Clone, Copy)]
 pub struct BigIntState<T>
@@ -34,8 +21,7 @@ where
     T: Clone + Default,
 {
     pub(super) num_bits: u32,
-    seed: [u64; MAX_SEED_SIZE],
-    seed_len: usize,
+    seed: [u64; SEED_LEN],
     _type: std::marker::PhantomData<T>,
 }
 
@@ -46,8 +32,7 @@ where
     fn default() -> Self {
         Self {
             num_bits: 0,
-            seed: [0; MAX_SEED_SIZE],
-            seed_len: size_of::<T>().div_ceil(4) + 1,
+            seed: [0; SEED_LEN],
             _type: std::marker::PhantomData,
         }
     }
@@ -61,9 +46,7 @@ where
         debug_assert!(num_buckets > 0, r#""num_buckets" must be greater than 0"#);
 
         let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
-        let seed_len = size_of::<T>().div_ceil(4) + 1;
-        let mut seed_arr = [0_u64; MAX_SEED_SIZE];
-        seed_arr[0..seed_len].fill_with(|| rng.random());
+        let seed = rng.random();
 
         let num_bits = num_bits_for_buckets(num_buckets);
 
@@ -74,8 +57,7 @@ where
 
         BigIntState {
             num_bits,
-            seed: seed_arr,
-            seed_len,
+            seed,
             _type: std::marker::PhantomData,
         }
     }
@@ -83,14 +65,7 @@ where
     pub const fn from_seed_const(seed: u64, num_buckets: u32) -> Self {
         debug_assert!(num_buckets > 0, r#""num_buckets" must be greater than 0"#);
 
-        let seed_len = size_of::<T>().div_ceil(4) + 1;
-        let mut seed_arr = generate_random_array!(u64, MAX_SEED_SIZE, seed);
-
-        let mut i = seed_len;
-        while i < MAX_SEED_SIZE {
-            seed_arr[i] = 0;
-            i += 1;
-        }
+        let seed = generate_random_array!(u64, SEED_LEN, seed);
 
         let num_bits = num_bits_for_buckets(num_buckets);
 
@@ -101,15 +76,9 @@ where
 
         BigIntState {
             num_bits,
-            seed: seed_arr,
-            seed_len,
+            seed,
             _type: std::marker::PhantomData,
         }
-    }
-
-    #[inline]
-    pub const fn seed(&self) -> &[u64] {
-        unsafe { core::slice::from_raw_parts(self.seed.as_ptr(), self.seed_len) }
     }
 }
 
@@ -137,10 +106,10 @@ macro_rules! impl_multiply_shift_big_int {
                     num_buckets_for_bits(self.state.num_bits)
                 }
                 fn hash(&self, value: &$T) -> u32 {
-                    pair_multiply_shift_vector_u8(
-                        &value.to_le_bytes(),
+                    pair_multiply_shift_u128(
+                        *value as u128,
                         self.state.num_bits,
-                        self.state.seed(),
+                        &self.state.seed,
                     )
                 }
             }
@@ -160,11 +129,10 @@ macro_rules! impl_multiply_shift_big_int {
                     num_buckets_for_bits(self.state.num_bits)
                 }
                 pub const fn hash_const(&self, value: &$T) -> u32 {
-                    let bytes = value.to_le_bytes();
-                    pair_multiply_shift_vector_u8_const(
-                        &bytes,
+                    pair_multiply_shift_u128(
+                        *value as u128,
                         self.state.num_bits,
-                        self.state.seed(),
+                        &self.state.seed,
                     )
                 }
             }
