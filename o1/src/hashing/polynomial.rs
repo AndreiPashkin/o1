@@ -184,8 +184,8 @@ pub fn polynomial(value: &[u8], num_bits: u32, seed: &PolynomialSeed) -> u32 {
 
 /// Hashes a 256-long chunk into a 64-bit hash using concatenation of two 32-bit hashes.
 fn hash_chunk(chunk: &[u64], h1_seed: &[u64], h2_seed: &[u64]) -> u64 {
-    let chunk_hash_high = pair_multiply_shift_vector_u64(chunk, 32, h1_seed);
-    let chunk_hash_low = pair_multiply_shift_vector_u64(chunk, 32, h2_seed);
+    let chunk_hash_high = pair_multiply_shift_vector_u64(chunk, 32, h1_seed[0], &h1_seed[1..]);
+    let chunk_hash_low = pair_multiply_shift_vector_u64(chunk, 32, h2_seed[0], &h2_seed[1..]);
     ((chunk_hash_high as u64) << 32) | (chunk_hash_low as u64)
 }
 
@@ -326,8 +326,19 @@ pub const fn polynomial_const(value: &[u8], num_bits: u32, seed: &PolynomialSeed
 
 /// Compile-time counterpart of [`hash_chunk`].
 const fn hash_chunk_const(chunk: &[u64], h1_seed: &[u64], h2_seed: &[u64]) -> u64 {
-    let chunk_hash_high = pair_multiply_shift_vector_u64_const(chunk, 32, h1_seed);
-    let chunk_hash_low = pair_multiply_shift_vector_u64_const(chunk, 32, h2_seed);
+    // In const contexts, we can't use slice patterns like [1..], so we need to use raw pointers
+    let h1_seed_value = h1_seed[0];
+    let h1_seed_rest =
+        unsafe { std::slice::from_raw_parts(h1_seed.as_ptr().add(1), h1_seed.len() - 1) };
+
+    let h2_seed_value = h2_seed[0];
+    let h2_seed_rest =
+        unsafe { std::slice::from_raw_parts(h2_seed.as_ptr().add(1), h2_seed.len() - 1) };
+
+    let chunk_hash_high =
+        pair_multiply_shift_vector_u64_const(chunk, 32, h1_seed_value, h1_seed_rest);
+    let chunk_hash_low =
+        pair_multiply_shift_vector_u64_const(chunk, 32, h2_seed_value, h2_seed_rest);
     ((chunk_hash_high as u64) << 32) | (chunk_hash_low as u64)
 }
 

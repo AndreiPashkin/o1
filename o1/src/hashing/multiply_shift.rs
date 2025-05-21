@@ -98,25 +98,29 @@ pub const fn pair_multiply_shift_u128(value: u128, num_bits: u32, seed: &[u64; 5
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed. The length of the seed vector must be `d * 2 + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len() * 2`.
 ///
 /// # Guarantees
 ///
 /// - Strong universality.
 #[inline]
-pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]) -> u32 {
+pub fn pair_multiply_shift_vector_u64(
+    value: &[u64],
+    num_bits: u32,
+    seed: u64,
+    value_seed: &[u64],
+) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len() * 2 + 1) <= seed.len(),
-        r#""seed" must be twice as long as the input "value" + 1"#,
+        value.len() * 2 <= value_seed.len(),
+        r#""value_seed" must be twice as long as the input "value""#,
     );
 
-    let mut sum = seed[0]; // Initializing the sum with the first seed value.
-
-    let seed = &seed[1..];
+    let mut sum = seed; // Initializing the sum with the seed value.
 
     for (i, &v) in value.iter().enumerate() {
-        let s = &seed[i * 2..i * 2 + 2];
+        let s = &value_seed[i * 2..i * 2 + 2];
 
         // Treating 64-bit values as a pairs of 32-bit values.
         let low = v;
@@ -136,7 +140,8 @@ pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed. The length of the seed vector must be `d * 2 + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len() * 2`.
 ///
 /// # Guarantees
 ///
@@ -145,31 +150,29 @@ pub fn pair_multiply_shift_vector_u64(value: &[u64], num_bits: u32, seed: &[u64]
 pub const fn pair_multiply_shift_vector_u64_const(
     value: &[u64],
     num_bits: u32,
-    seed: &[u64],
+    seed: u64,
+    value_seed: &[u64],
 ) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len() * 2 + 1) <= seed.len(),
-        r#""seed" must be twice as long as the input "value" + 1"#
+        value.len() * 2 <= value_seed.len(),
+        r#""value_seed" must be twice as long as the input "value""#
     );
 
-    let mut sum = seed[0]; // Initializing the sum with the first seed value.
+    let mut sum = seed; // Initializing the sum with the seed value.
 
     let mut i = 0;
     while i < value.len() {
         let v = value[i];
-
-        // Seed offset calculation - need to access seed elements directly
-        let s_idx = 1 + i * 2;
 
         // Treating 64-bit values as a pair of 32-bit values
         let low = v;
         let high = v >> 32;
 
         sum = sum.wrapping_add(
-            seed[s_idx]
+            value_seed[i * 2]
                 .wrapping_add(high)
-                .wrapping_mul(seed[s_idx + 1].wrapping_add(low)),
+                .wrapping_mul(value_seed[i * 2 + 1].wrapping_add(low)),
         );
 
         i += 1;
@@ -184,48 +187,54 @@ pub const fn pair_multiply_shift_vector_u64_const(
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed of length `d.div_ceil(4) + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len().div_ceil(4)`.
 ///
 /// # Guarantees
 ///
 /// - Strong universality.
 #[inline]
-pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) -> u32 {
+pub fn pair_multiply_shift_vector_u8(
+    value: &[u8],
+    num_bits: u32,
+    seed: u64,
+    value_seed: &[u64],
+) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len().div_ceil(4) + 1) <= seed.len(),
-        r#""seed" must have 1 element per 4 elements in the input "value" + 1"#,
+        value.len().div_ceil(4) <= value_seed.len(),
+        r#""value_seed" must have 1 element per 4 elements in the input "value""#,
     );
 
     match value.len() {
-        0 => extract_bits_64::<{ u64::BITS }>(seed[0], num_bits),
+        0 => extract_bits_64::<{ u64::BITS }>(seed, num_bits),
         1..=3 => {
             let mut padded = [0; 4];
             padded[..value.len()].copy_from_slice(value);
             let value = u32::from_le_bytes(padded);
-            let seed = unsafe { seed.first_chunk().unwrap_unchecked() };
-            multiply_shift(value, num_bits, seed)
+            let seed_arr = [seed, value_seed.first().copied().unwrap_or(0)];
+            multiply_shift(value, num_bits, &seed_arr)
         }
         4 => {
             let value = unsafe { value.first_chunk::<4>().unwrap_unchecked() };
             let value = u32::from_le_bytes(*value);
-            let seed = unsafe { seed.first_chunk().unwrap_unchecked() };
-            multiply_shift(value, num_bits, seed)
+            let seed_arr = [seed, value_seed.first().copied().unwrap_or(0)];
+            multiply_shift(value, num_bits, &seed_arr)
         }
         5..=7 => {
             let mut padded = [0; 8];
             padded[..value.len()].copy_from_slice(value);
 
             let value = u64::from_le_bytes(padded);
-            let seed = unsafe { seed.first_chunk().unwrap_unchecked() };
-            pair_multiply_shift(value, num_bits, seed)
+            let seed_arr = [seed, value_seed[0], value_seed[1]];
+            pair_multiply_shift(value, num_bits, &seed_arr)
         }
         8 => {
             let value = unsafe { value.first_chunk::<8>().unwrap_unchecked() };
             let value = u64::from_le_bytes(*value);
-            let seed = unsafe { seed.first_chunk().unwrap_unchecked() };
+            let seed_arr = [seed, value_seed[0], value_seed[1]];
 
-            pair_multiply_shift(value, num_bits, seed)
+            pair_multiply_shift(value, num_bits, &seed_arr)
         }
         _ => {
             let c = value.len();
@@ -237,7 +246,7 @@ pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) 
                 unsafe { std::slice::from_raw_parts_mut(x.as_mut_ptr() as *mut u8, d * 8) };
             x_bytes[..c].copy_from_slice(value);
 
-            pair_multiply_shift_vector_u64(x.as_slice(), num_bits, seed)
+            pair_multiply_shift_vector_u64(x.as_slice(), num_bits, seed, value_seed)
         }
     }
 }
@@ -250,21 +259,27 @@ pub fn pair_multiply_shift_vector_u8(value: &[u8], num_bits: u32, seed: &[u64]) 
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed of length `d.div_ceil(4) + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len().div_ceil(4)`.
 ///
 /// # Guarantees
 ///
 /// - Strong universality.
 #[inline]
-pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, seed: &[u64]) -> u32 {
+pub const fn pair_multiply_shift_vector_u8_const(
+    value: &[u8],
+    num_bits: u32,
+    seed: u64,
+    value_seed: &[u64],
+) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len().div_ceil(4) + 1) <= seed.len(),
-        r#""seed" must have 1 element per 4 elements in the input "value" + 1"#
+        value.len().div_ceil(4) <= value_seed.len(),
+        r#""value_seed" must have 1 element per 4 elements in the input "value""#
     );
 
     match value.len() {
-        0 => extract_bits_64::<{ u64::BITS }>(seed[0], num_bits),
+        0 => extract_bits_64::<{ u64::BITS }>(seed, num_bits),
         1..=3 => {
             let mut padded = [0u8; 4];
             let mut i = 0;
@@ -273,9 +288,8 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
                 i += 1;
             }
             let value = u32::from_le_bytes(padded);
-            multiply_shift(value, num_bits, unsafe {
-                seed.first_chunk().unwrap_unchecked()
-            })
+            let seed_arr = [seed, value_seed[0]];
+            multiply_shift(value, num_bits, &seed_arr)
         }
         4 => {
             let mut bytes = [0u8; 4];
@@ -285,9 +299,8 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
                 i += 1;
             }
             let value = u32::from_le_bytes(bytes);
-            multiply_shift(value, num_bits, unsafe {
-                seed.first_chunk().unwrap_unchecked()
-            })
+            let seed_arr = [seed, value_seed[0]];
+            multiply_shift(value, num_bits, &seed_arr)
         }
         5..=7 => {
             let mut padded = [0u8; 8];
@@ -297,9 +310,8 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
                 i += 1;
             }
             let value = u64::from_le_bytes(padded);
-            pair_multiply_shift(value, num_bits, unsafe {
-                seed.first_chunk().unwrap_unchecked()
-            })
+            let seed_arr = [seed, value_seed[0], value_seed[1]];
+            pair_multiply_shift(value, num_bits, &seed_arr)
         }
         8 => {
             let mut bytes = [0u8; 8];
@@ -309,12 +321,11 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
                 i += 1;
             }
             let value = u64::from_le_bytes(bytes);
-            pair_multiply_shift(value, num_bits, unsafe {
-                seed.first_chunk().unwrap_unchecked()
-            })
+            let seed_arr = [seed, value_seed[0], value_seed[1]];
+            pair_multiply_shift(value, num_bits, &seed_arr)
         }
         _ => {
-            let mut sum = seed[0];
+            let mut sum = seed;
             let num_chunks = (value.len() + 7) >> 3;
             let mut chunk_idx = 0;
 
@@ -339,15 +350,13 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
 
                 let v = u64::from_le_bytes(bytes);
 
-                let s_idx = 1 + chunk_idx * 2;
-
                 let low = v;
                 let high = v >> 32;
 
                 sum = sum.wrapping_add(
-                    seed[s_idx]
+                    value_seed[chunk_idx * 2]
                         .wrapping_add(high)
-                        .wrapping_mul(seed[s_idx + 1].wrapping_add(low)),
+                        .wrapping_mul(value_seed[chunk_idx * 2 + 1].wrapping_add(low)),
                 );
 
                 chunk_idx += 1;
@@ -364,25 +373,29 @@ pub const fn pair_multiply_shift_vector_u8_const(value: &[u8], num_bits: u32, se
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed. The length of the seed vector must be `d * 4 + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len() * 4`.
 ///
 /// # Guarantees
 ///
 /// - Strong universality.
 #[inline]
-pub fn pair_multiply_shift_vector_u128(value: &[u128], num_bits: u32, seed: &[u64]) -> u32 {
+pub fn pair_multiply_shift_vector_u128(
+    value: &[u128],
+    num_bits: u32,
+    seed: u64,
+    value_seed: &[u64],
+) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len() * 4 + 1) <= seed.len(),
-        r#""seed" must be four times as long as the input "value" + 1"#,
+        (value.len() * 4) <= value_seed.len(),
+        r#""value_seed" must be four times as long as the input "value""#,
     );
 
-    let mut sum = seed[0];
-
-    let seed = &seed[1..];
+    let mut sum = seed;
 
     for (i, &v) in value.iter().enumerate() {
-        let s = &seed[i * 4..i * 4 + 4];
+        let s = &value_seed[i * 4..i * 4 + 4];
 
         // Interpreting the 128-bit value as four 32-bit values
         let first = v as u64;
@@ -411,7 +424,8 @@ pub fn pair_multiply_shift_vector_u128(value: &[u128], num_bits: u32, seed: &[u6
 ///
 /// - `value`: The input vector with length up to `d`.
 /// - `num_bits`: Number of bits in the output hash. Hash range would be equal to `2 ** num_bits`.
-/// - `seed`: Random seed. The length of the seed vector must be `d * 4 + 1`.
+/// - `seed`: Random seed (constant part).
+/// - `value_seed`: Random seed (variable part dependent on input length). Must have length equal to `value.len() * 4`.
 ///
 /// # Guarantees
 ///
@@ -420,21 +434,20 @@ pub fn pair_multiply_shift_vector_u128(value: &[u128], num_bits: u32, seed: &[u6
 pub const fn pair_multiply_shift_vector_u128_const(
     value: &[u128],
     num_bits: u32,
-    seed: &[u64],
+    seed: u64,
+    value_seed: &[u64],
 ) -> u32 {
     debug_assert!(num_bits <= 32, r#""num_bits" must be <= 32"#);
     debug_assert!(
-        (value.len() * 4 + 1) <= seed.len(),
-        r#""seed" must be four times as long as the input "value" + 1"#
+        (value.len() * 4) <= value_seed.len(),
+        r#""value_seed" must be four times as long as the input "value""#
     );
 
-    let mut sum = seed[0];
+    let mut sum = seed;
 
     let mut i = 0;
     while i < value.len() {
         let v = value[i];
-
-        let s_idx = 1 + i * 4;
 
         // Interpreting the 128-bit value as four 32-bit values
         let first = v as u64;
@@ -443,13 +456,13 @@ pub const fn pair_multiply_shift_vector_u128_const(
         let fourth = (v >> 96) as u64;
 
         sum = sum.wrapping_add(
-            seed[s_idx]
+            value_seed[i * 4]
                 .wrapping_add(first)
-                .wrapping_mul(seed[s_idx + 1].wrapping_add(second))
+                .wrapping_mul(value_seed[i * 4 + 1].wrapping_add(second))
                 .wrapping_add(
-                    seed[s_idx + 2]
+                    value_seed[i * 4 + 2]
                         .wrapping_add(third)
-                        .wrapping_mul(seed[s_idx + 3].wrapping_add(fourth)),
+                        .wrapping_mul(value_seed[i * 4 + 3].wrapping_add(fourth)),
                 ),
         );
 
@@ -553,7 +566,8 @@ mod tests {
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 (
                     Box::new(move |value: &[u64; 32]| {
-                        pair_multiply_shift_vector_u64(value, num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u64(value, num_bits, seed[0], &seed[1..])
+                            as usize
                     }),
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -577,7 +591,7 @@ mod tests {
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 (
                     Box::new(move |value: &[u8; 32]| {
-                        pair_multiply_shift_vector_u8(value, num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u8(value, num_bits, seed[0], &seed[1..]) as usize
                     }),
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -602,7 +616,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u64>| {
-                        pair_multiply_shift_vector_u64(value.as_slice(), num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u64(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u64>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -616,8 +635,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u64>| {
-                        pair_multiply_shift_vector_u64_const(value.as_slice(), num_bits, &seed)
-                            as usize
+                        pair_multiply_shift_vector_u64_const(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u64>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -662,7 +685,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u8>| {
-                        pair_multiply_shift_vector_u8(value.as_slice(), num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u8(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u8>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -686,8 +714,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u8>| {
-                        pair_multiply_shift_vector_u8_const(value.as_slice(), num_bits, &seed)
-                            as usize
+                        pair_multiply_shift_vector_u8_const(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u8>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -723,7 +755,8 @@ mod tests {
                 let num_bits = num_bits_for_buckets(num_buckets as u32);
                 (
                     Box::new(move |value: &[u128; 16]| {
-                        pair_multiply_shift_vector_u128(value, num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u128(value, num_bits, seed[0], &seed[1..])
+                            as usize
                     }),
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -748,7 +781,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u128>| {
-                        pair_multiply_shift_vector_u128(value.as_slice(), num_bits, &seed) as usize
+                        pair_multiply_shift_vector_u128(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u128>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
@@ -762,8 +800,12 @@ mod tests {
 
                 (
                     Box::new(move |value: &Vec<u128>| {
-                        pair_multiply_shift_vector_u128_const(value.as_slice(), num_bits, &seed)
-                            as usize
+                        pair_multiply_shift_vector_u128_const(
+                            value.as_slice(),
+                            num_bits,
+                            seed[0],
+                            &seed[1..],
+                        ) as usize
                     }) as Box<dyn Fn(&Vec<u128>) -> usize>,
                     num_buckets_for_bits(num_bits) as usize,
                 )
