@@ -42,25 +42,6 @@ where
     }
 }
 
-/// Trait for the const methods needed by MSPHasher implementations
-///
-/// These const methods are implemented on the concrete types, not as part of
-/// the trait definition.
-pub trait MSPHasherConst<T: Eq>: Hasher<T> {
-    /// Create a new hasher from the given `state`.
-    /// Compile-time version.
-    fn from_state_const(state: Self::State) -> Self;
-}
-
-impl<T: Eq> MSPHasherConst<T> for MSPHasher<T>
-where
-    MSPHasher<T>: Hasher<T>,
-{
-    fn from_state_const(state: <Self as Hasher<T>>::State) -> Self {
-        Self { state }
-    }
-}
-
 impl<T: Eq> MSPHasher<T>
 where
     MSPHasher<T>: Hasher<T>,
