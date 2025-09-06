@@ -356,7 +356,7 @@ macro_rules! impl_bit_array {
             }
 
             /// Returns an iterator over the indices of all bits set to 1.
-            pub fn iter_ones(&self) -> BitArrayOnesIter<$type, N> {
+            pub fn iter_ones(&self) -> BitArrayOnesIter<'_, $type, N> {
                 BitArrayOnesIter {
                     bit_array: self,
                     bucket_idx: 0,
