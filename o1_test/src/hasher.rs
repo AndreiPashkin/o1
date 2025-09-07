@@ -30,7 +30,7 @@ macro_rules! generate_hasher_tests {
                     use rand::SeedableRng;
                     use rand_chacha::ChaCha20Rng;
 
-                    o1_testing::hasher_equivalence!(
+                    $crate::hasher_equivalence!(
                         $hasher_type,
                         $key_type,
                         &mut ChaCha20Rng::from_os_rng(),

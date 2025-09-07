@@ -209,7 +209,7 @@ mod tests {
     use crate::fks::FKSMap;
     use crate::hashing::hashers::msp::*;
     use o1_core::HashMap;
-    use o1_testing::generate_map_tests;
+    use o1_test::generate_map_tests;
     use std::fmt::Debug;
 
     fn factory<'a, K: Eq + Debug, V: Copy + Debug, H: Hasher<K>>(

@@ -279,7 +279,7 @@ impl_for_array!(usize, isize);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use o1_testing::generate_hasher_tests;
+    use o1_test::generate_hasher_tests;
 
     generate_hasher_tests!(MSPHasher<u64>, u64, |rng: &mut ChaCha20Rng| rng
         .random::<u64>());
