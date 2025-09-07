@@ -12,7 +12,7 @@
 ///
 /// ```rust
 /// use o1_core::HashMap;
-/// use o1::hashing::hashers::MSPHasher;
+/// use o1::hashing::hashers::msp::MSPHasher;
 /// use o1::new_fks_map;
 ///
 /// // Create a static perfect hash map of book ratings
@@ -417,7 +417,7 @@ pub use new_fks_map as new_const;
 #[cfg(test)]
 mod tests {
     #![allow(long_running_const_eval)]
-    use crate::hashing::hashers::MSPHasher;
+    use crate::hashing::hashers::msp::MSPHasher;
     use crate::new_fks_map;
     use o1_core::HashMap;
     use o1_testing::data::*;

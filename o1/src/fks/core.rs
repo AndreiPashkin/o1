@@ -16,7 +16,7 @@ use std::mem::MaybeUninit;
 ///
 /// ```rust
 /// use o1_core::HashMap;
-/// use o1::hashing::hashers::MSPHasher;
+/// use o1::hashing::hashers::msp::MSPHasher;
 /// use o1::fks::FKSMap;
 ///
 /// let book_reviews = FKSMap::<&str, &str, MSPHasher<&str>>::new(
