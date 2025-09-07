@@ -420,8 +420,8 @@ mod tests {
     use crate::hashing::hashers::msp::MSPHasher;
     use crate::new_fks_map;
     use o1_core::HashMap;
-    use o1_testing::data::*;
-    use o1_testing::generate_static_map_tests;
+    use o1_test::data::*;
+    use o1_test::generate_static_map_tests;
 
     new_fks_map!(U8_MAP, u8, u64, U8_DATA, MSPHasher<u8>, 42, 0.75);
     new_fks_map!(I8_MAP, i8, u64, I8_DATA, MSPHasher<i8>, 42, 0.75);

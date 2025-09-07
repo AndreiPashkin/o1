@@ -267,7 +267,7 @@ impl_bigint_array_hasher!(u128, i128);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use o1_testing::generate_hasher_tests;
+    use o1_test::generate_hasher_tests;
 
     generate_hasher_tests!(MSPHasher<u128>, u128, |rng: &mut ChaCha20Rng| rng
         .random::<u128>());

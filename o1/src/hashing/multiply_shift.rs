@@ -476,7 +476,7 @@ pub const fn pair_multiply_shift_vector_u128_const(
 mod tests {
     use super::*;
     use crate::hashing::common::{num_bits_for_buckets, num_buckets_for_bits};
-    use o1_testing::*;
+    use o1_test::*;
     use rand::prelude::*;
     use rand_chacha::ChaCha20Rng;
 

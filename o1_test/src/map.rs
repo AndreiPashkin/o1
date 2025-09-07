@@ -75,8 +75,8 @@ macro_rules! generate_map_int_tests {
         compose_idents!(test_fn = [test_build_get_map_, $type], {
             #[test]
             fn test_fn() {
-                use o1_testing::*;
                 use std::ops::Div;
+                use $crate::*;
 
                 use rand::rngs::ThreadRng;
                 let mut rng = rand::rng();
@@ -115,7 +115,7 @@ macro_rules! generate_map_int_special_tests {
                 #[test]
                 fn test_fn() {
                     use std::ops::Div;
-                    use o1_testing::*;
+                    use $crate::*;
 
                     use rand::rngs::ThreadRng;
                     let mut rng = rand::rng();
@@ -152,7 +152,7 @@ macro_rules! generate_map_str_tests {
     ($Map:tt, $Hasher:tt, $factory: expr) => {
         #[test]
         fn test_build_get_map_str() {
-            use o1_testing::*;
+            use $crate::*;
 
             use rand::rngs::ThreadRng;
 
@@ -181,7 +181,7 @@ macro_rules! generate_map_str_special_tests {
     ($Map:tt, $Hasher:tt, $factory: expr) => {
         #[test]
         fn test_get_key_zero_str() {
-            use o1_testing::*;
+            use $crate::*;
 
             use rand::rngs::ThreadRng;
 

@@ -1,5 +1,5 @@
 [package]
-name = "o1_testing"
+name = "o1_test"
 version.workspace = true
 edition.workspace = true
 publish = false

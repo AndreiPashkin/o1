@@ -18,7 +18,7 @@ bitvec = "~1.0.1"
 xxhash-rust = { version = "~0.8.0", optional = true, features = ["xxh3", "const_xxh3"] }
 
 [dev-dependencies]
-o1_testing.workspace = true
+o1_test.workspace = true
 
 [lints]
 workspace = true

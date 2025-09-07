@@ -175,8 +175,8 @@ impl<'a> XXH3Hasher<&'a str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use o1_testing::generate::Generate;
-    use o1_testing::generate_hasher_tests;
+    use o1_test::generate::Generate;
+    use o1_test::generate_hasher_tests;
 
     generate_hasher_tests!(XXH3Hasher<&str>, &'static str, |rng| {
         String::generate(
