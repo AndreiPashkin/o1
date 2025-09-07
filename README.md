@@ -10,7 +10,8 @@ general-purpose hash tables.
   - [x] The polynomial family.
   - [ ] Optimizations by introducing SIMD instructions.
   - [ ] Other optimizations.
-- [ ] An alternative fast hashing algorithm.
+- [x] An alternative fast hashing algorithm.
+  - [x] XXH3 hashing algorithm.
 - [x] The FKS perfect hashing scheme.
   - [x] Compile-time construction.
   - [x] Run-time construction.
@@ -24,6 +25,10 @@ general-purpose hash tables.
       the expense of increased memory usage.
 - [ ] `no_std` support.
 - [ ] `derive`-macro for auto-generation of library's hashers.
+
+## Features
+
+- `xxh3` - enables the XXH3 hashing algorithm.
 
 ## Development
 
