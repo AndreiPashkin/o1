@@ -72,7 +72,7 @@ pub fn test_build<
 #[macro_export]
 macro_rules! generate_map_int_tests {
     ($Map:tt, $Hasher:tt, $cons: expr, $type:ty) => {
-        compose_idents!(test_fn = [test_build_get_map_, $type], {
+        compose_idents!(test_fn = concat(test_build_get_map_, $type), {
             #[test]
             fn test_fn() {
                 use std::ops::Div;
@@ -111,7 +111,7 @@ macro_rules! generate_map_int_tests {
 macro_rules! generate_map_int_special_tests {
     ($Map:tt, $Hasher:tt, $cons: expr, $($type:ty),*) => {
         $(
-            compose_idents!(test_fn = [test_get_key_zero_, $type], {
+            compose_idents!(test_fn = concat(test_get_key_zero_, $type), {
                 #[test]
                 fn test_fn() {
                     use std::ops::Div;
@@ -273,7 +273,7 @@ macro_rules! generate_static_map_tests {
 
         macro_rules! generate_tests_for_type {
             ($type:ident, $map:expr, $data:expr) => {
-                compose_idents!(test_fn = [test_static_map_, $type], {
+                compose_idents!(test_fn = concat(test_static_map_, $type), {
                     #[test]
                     fn test_fn() {
                         for (key, val) in &$data {
