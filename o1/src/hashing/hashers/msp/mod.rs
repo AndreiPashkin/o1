@@ -10,3 +10,5 @@ mod bigint;
 pub use bigint::*;
 mod string;
 pub use string::*;
+mod option;
+pub use option::*;

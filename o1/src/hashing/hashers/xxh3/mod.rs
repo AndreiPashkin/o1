@@ -8,3 +8,5 @@ mod smallint;
 pub use smallint::*;
 mod string;
 pub use string::*;
+mod option;
+pub use option::*;
