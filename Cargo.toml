@@ -11,7 +11,7 @@ o1_core = { path = "o1_core", version = "0.0.1-alpha.4" }
 o1_test = { path = "o1_test", version = "0.0.1-alpha.4" }
 rand = "~0.9.0"
 rand_chacha = "~0.9.0"
-compose-idents = "~0.1.0"
+compose-idents = "~0.2.0"
 
 [workspace.lints.clippy]
 doc_overindented_list_items = "allow"

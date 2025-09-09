@@ -23,7 +23,7 @@
 macro_rules! generate_hasher_tests {
     ($hasher_type:ty, $key_type:ty, $generate_key:expr$(,)?) => {
         compose_idents::compose_idents!(
-            test_fn = [test_hasher_const_hashing_equivalence_, normalize($key_type)],
+            test_fn = concat(test_hasher_const_hashing_equivalence_, normalize($key_type)),
             {
                 #[test]
                 fn test_fn() {
