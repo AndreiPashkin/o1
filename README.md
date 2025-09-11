@@ -1,3 +1,5 @@
+[![Build](https://github.com/AndreiPashkin/o1/actions/workflows/build.yml/badge.svg)](https://github.com/AndreiPashkin/o1/actions/workflows/build.yml)
+
 # O1 Project
 
 The O1 (as in _O(1)_) project focuses on implementing hashing schemes for perfect and
