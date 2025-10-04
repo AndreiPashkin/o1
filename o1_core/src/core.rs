@@ -18,7 +18,7 @@
 /// implementations with `unimplemented!()` as the only instruction within them.
 pub trait Hasher<T>
 where
-    Self: Default,
+    Self: Clone + Default,
     T: Eq,
 {
     /// State of the hasher instance.

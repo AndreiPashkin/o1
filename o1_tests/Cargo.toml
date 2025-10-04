@@ -1,0 +1,13 @@
+[package]
+name = "o1_tests"
+version.workspace = true
+edition.workspace = true
+
+[dev-dependencies]
+o1 = { workspace = true, features = ["xxh3"] }
+o1_derive.workspace = true
+o1_core.workspace = true
+trybuild = "1.0"
+
+[lints]
+workspace = true

@@ -26,7 +26,7 @@ general-purpose hash tables.
 - [ ] Implement the brute-force perfect hashing scheme that guarantees minimal lookup and construction times at
       the expense of increased memory usage.
 - [ ] `no_std` support.
-- [ ] `derive`-macro for auto-generation of library's hashers.
+- [x] `derive`-macro for auto-generation of library's hashers.
 
 ## Features
 
