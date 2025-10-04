@@ -99,6 +99,9 @@ cargo test -p o1 fks::ctors::new::tests::test_build_get_map_u32
 
 # Slow tests are enabled
 cargo test -p o1 --features _slow-tests
+
+# Run a particular trybuild test
+cargo test -p o1_tests -- trybuild=tests/derive/user_defined_types/struct/runtime.rs
 ```
 
 
@@ -119,11 +122,8 @@ task generate
 
 ## 5 Standards and Conventions
 
-## 5.1 Code quality & style
+## 5.1 General principles
 
-- Generally prefer to follow [Rust Style Guide](https://doc.rust-lang.org/stable/style-guide/).
-- Use [the Rust Book](https://doc.rust-lang.org/stable/book/index.html) for a reference on idiomatic Rust code.
-- Aim to write idiomatic Rust code
 - Follow general principles of writing maintainable code:
   - DRY (Don't Repeat Yourself).
   - KISS (Keep It Simple, Stupid).
@@ -131,10 +131,41 @@ task generate
   - YAGNI (You Aren't Gonna Need It).
   - Separation of Concerns.
   - Write Self-Documenting Code.
-  - Prefer avoiding overly large functions and modules.
-  - Prefer not shortened names for variables, functions, other entities. Instead of `svc` prefer `service`, instead of
-    `cfg` - `config`, instead of `val` - `value`, etc. For closure parameters use one letter or short names.
-  - Etc.
+  - Avoid overly large functions and modules.
+
+## 5.2 Code quality & style
+
+- Generally prefer to follow [Rust Style Guide](https://doc.rust-lang.org/stable/style-guide/).
+- Use [the Rust Book](https://doc.rust-lang.org/stable/book/index.html) for a reference on idiomatic Rust code.
+- Aim to write idiomatic Rust code
 - Follow general OOP principles.
 - Follow the existing code style in each existing file.
 - Add comments for complex code, sophisticated algorithms, etc.
+
+## 5.3 Naming
+
+- No abbreviations: in general, use full, descriptive names for variables, functions, types, modules, and other
+  constructs. Prefer clarity to brevity.
+  - Examples:
+    - `cfg` → `config`
+    - `svc` → `service`
+    - `val` → `value`
+    - `cnt` → `count`
+    - `ty` → `type`
+- It's okay to abbreviate very common terms like `idx`, `num`, `msg`, `err`, `tmp`, `ref`, `ptr`, `func`, `dir`, `impl`,
+  especially in compound names (e.g., `field_idx`, `msg_handler`, `tmp_dir`, `err_code`).
+- Closure parameters: short or single-letter names are acceptable when idiomatic (e.g. small closures in iterators).
+- Prefer domain-meaningful names that reflect a value’s role.
+  - Avoid using overly generic, names that do not carry any meaning.
+  - Avoid having a type in the name (e.g., `user_list`, `config_map`) without specific need (when you actually need to
+    distinguish name by the type).
+- Be consistent across a file/module to aid readability.
+
+## 5.4 Docstrings
+
+- Use declarative mood in the docstrings (e.g., "Returns the number of items", not "Return the number of items").
+- Begin with a concise, active summary (e.g., "Creates...", "Parses...", "A ..."). Don't prefix with item-type words
+  ("This function/method/struct") or fillers ("Represents", "Note that", "Tests" in tests).
+- If there is a need to add details - add them in subsequent paragraphs and standard sections ("# Errors", "# Panics",
+  "# Safety", "# Examples").
+- Implementation notes could be described in "# Notes" section.
